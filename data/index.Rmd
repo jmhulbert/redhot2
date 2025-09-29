@@ -1,0 +1,454 @@
+---
+title: "Redhot 2.0 Data Wrangle"
+output: html_document
+date: "2025-09-03"
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+```
+
+
+# Purpose
+
+The purpose of this page is to share the steps taken to wrangle the data for the urban redcedar analyses for reproducability.
+
+
+# Data
+
+Observations of western redcedar were downloaded from iNaturalist and urban heat data were downloaded from open data portals or provided by contacts in the City of Tacoma, King County (Washington) and Portland. Trees in WA were also evaluated based on EHD Ranks.
+
+## iNaturalist
+
+iNaturalist data were downloaded on 9.3.2025 with the below query. 
+    + full data (query: quality_grade=any&identifications=any%projects%5B%5D=western-redcedar-dieback-map)
+      + Note we needed to specify all fields related to place and all fields related to the project
+      
+      
+```{r eval=FALSE}
+Query quality_grade=any&identifications=any&projects[]=western-redcedar-dieback-map
+Columns id, uuid, observed_on_string, observed_on, time_observed_at, time_zone, user_id, user_login, user_name, created_at, updated_at, quality_grade, license, url, image_url, sound_url, tag_list, description, num_identification_agreements, num_identification_disagreements, captive_cultivated, oauth_application_id, place_guess, latitude, longitude, positional_accuracy, private_place_guess, private_latitude, private_longitude, public_positional_accuracy, geoprivacy, taxon_geoprivacy, coordinates_obscured, positioning_method, positioning_device, place_town_name, place_county_name, place_state_name, place_country_name, place_admin1_name, place_admin2_name, species_guess, scientific_name, common_name, iconic_taxon_name, taxon_id, field:tree+health+condition, field:tree+canopy+symptoms, field:dieback+percent, field:percent+canopy+affected+%28%25%29, field:number+of+additional+unhealthy+trees+%28of+same+species%29+in+area+%28within+sight%29, field:other+factors+-+are+there+signs+or+symptoms+of+insect%2C+diseases%2C+or+other+damage%3F, field:optional+-+what+%27other+factors%27+were+observed%3F, field:optional+-+tree+size, field:optional+-+access+to+water, field:optional+-+estimated+time+spent+to+make+this+observation+%28%23+of+minutes%29, field:tree+number+%28from+google+map%29+if+applicable, field:tree+number+%28from+arboreta+or+other+dataset%29+if+applicable, field:optional+-+signs+of+sap+sucker+feeding%3F, field:notes, field:are+baby+redcedar+trees+present+within+sight%3F, field:brief+tree+health+description, field:did+the+tree+have+any+bark+discoloration+%28eg.+browning%29, field:evidence+of+wood+borers+or+bark+beetles%3F, field:leaf+production+or+drop+timing, field:location+name+-+community+spaces, field:location+type+-+community+spaces, field:most+prevalent+understory+species, field:optional+-+can+we+follow+up+with+you%3F, field:optional+-+did+the+tree+have+heat+damage, field:optional+-+site+hydrology, field:optional+-+site+type, field:optional+-+site%2Farea+disturbance+level, field:optional+-+site%2Flocation+description, field:optional+-+slope+position, field:optional+-+timing+of+symptoms+estimate, field:optional+-+were+there+any+other+unhealthy+plant+species+on+the+site%3F, field:percent+of+trees+%28of+same+species%29+within+sight+that+are+unhealthy, field:plant+health+condition, field:plant+health+symptom+-+rhododendron, field:powdery+mildew+-+percent+coverage, field:powdery+mildew%3F, field:relative+cone+crop, field:sample+submitted+to+laboratory%3F, field:signs+of+sooty+bark+disease%3F, field:suspected+phytophthora+infection%3F, field:tree+canopy+symptoms+-+birch, field:tree+canopy+symptoms+-+maple, field:tree+canopy+symptoms+-+wrc+-+simplified, field:tree+condition, field:tree+diameter, field:tree+diameter+%28inches%29, field:tree+equity+score, field:tree+health+issue, field:tree+height+total+%28ft%29, field:tree+number, field:urban+tree+health+condition  
+```
+
+## Urban Heat Data
+
+* Urban Heat Island data were obtained for the following locations
+  + Portland, OR (downloaded from https://osf.io/eb4tw/ accessed 4.16.22)
+  + King County, WA (downloaded from https://osf.io/mz79p/ accessed on 4.16.22)
+  + Tacoma, WA (received from City of Tacoma)
+  + Pierce County, WA (downloaded from )
+
+> ** Thank you CAPA Strategies for preparing, maintaining and sharing the urban heat data openly !! **
+
+Readme File Notation included with Pierce County 
+
+
+# Pre-GIS Data Wrangle Methods
+
+
+```{r}
+inat.full <- read.csv("./WRDM-Observations-9.3.25.csv")
+```
+
+
+```{r}
+names(inat.full )
+```
+
+## Prep for QGIS Data Extracts
+
+Filter data to only include necessary columns 
+
+[1] "id" 
+[24] "latitude" 
+[25] "longitude" 
+[36] "place_town_name" 
+[37] "place_county_name" 
+
+```{r}
+inat.full.qgis <- inat.full[c(1,24,25,36,37)]
+```
+
+```{r}
+#write.csv(inat.full.qgis,file="./WRDM-full-9.3.25-qgis.csv")
+```
+
+
+## QGIS Methods
+
+* Import into QGIS
+  + Data Source Manager - Delimited Text - Browse to R working directory
+  + Add heat data
+  
+```{r eval=FALSE, include=FALSE}
+#python input --- NOTE open python console, then show editor, then copy below code and run
+from qgis.core import QgsProject
+names = [layer.name() for layer in QgsProject.instance().mapLayers().values()]
+print(names)
+```
+
+```{r eval=FALSE, include=FALSE}
+#python output
+['825a_2', '825b_2', '825c_2', 'WRDM-full-9.3.25-qgis', 'af_t_f_ranger', 'am_t_f_ranger', 'pierce-county-washington_af_temp_f', 'pierce-county-washington_am_temp_f', 'pierce-county-washington_pm_temp_f', 'pm_t_f_ranger', 'tac_af', 'tac_am', 'tac_pm']
+```
+  
+```{r eval=FALSE, include=FALSE}
+#layers renamed to 
+['po_am', 'po_af', 'po_pm', 'WRDM-full-9.3.25-qgis', 'kc_af', 'kc_am', 'pc_af', 'pc_am', 'pc_pm', 'kc_pm', 'tac_af', 'tac_am', 'tac_pm']
+```
+
+* Sample Raster Values
+  + Add heat data from each layer to the iNat points
+  + Raster Analysis- Sample Raster Values
+  
+
+```{r eval=FALSE, include=FALSE}
+# qgis input - note i renamed the temporary output layer each time by hand.. (e.g. Sampled 1-12)
+processing.run("native:rastersampling", {'INPUT':'delimitedtext://file:///Users/profbabykangaroo/Library/Mobile%20Documents/com~apple~CloudDocs/Core/Server%20Files/redhot2/data/WRDM-full-9.3.25-qgis.csv?type=csv&maxFields=10000&detectTypes=yes&xField=longitude&yField=latitude&crs=EPSG:4326&spatialIndex=no&subsetIndex=no&watchFile=no','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/King County/All Data_CHW_Seattle KingCounty_093020/rasters_chw_seattle king county_120120/af_t_f_ranger.tif','COLUMN_PREFIX':'kc_af','OUTPUT':'TEMPORARY_OUTPUT'})
+processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&uid={aa48cd1e-8f83-4554-afbb-d4a2f5ec33de}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/King County/All Data_CHW_Seattle KingCounty_093020/rasters_chw_seattle king county_120120/am_t_f_ranger.tif','COLUMN_PREFIX':'kc_am','OUTPUT':'TEMPORARY_OUTPUT'})
+processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&uid={8d135e93-2830-49e2-a9c9-8b2b1c8840f5}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/King County/All Data_CHW_Seattle KingCounty_093020/rasters_chw_seattle king county_120120/pm_t_f_ranger.tif','COLUMN_PREFIX':'kc_pm','OUTPUT':'TEMPORARY_OUTPUT'})
+processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&uid={25a7078d-6319-432a-9aaf-50214e5c6327}','RASTERCOPY':'/Users/profbabykangaroo/Downloads/osfstorage-archive/rasters_chw_pierce_county_washington_082724/pierce-county-washington_af_temp_f.tif','COLUMN_PREFIX':'pc_af','OUTPUT':'TEMPORARY_OUTPUT'})
+processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&uid={5bfc188e-ecf3-4e43-8ac1-7842bac356e4}','RASTERCOPY':'/Users/profbabykangaroo/Downloads/osfstorage-archive/rasters_chw_pierce_county_washington_082724/pierce-county-washington_am_temp_f.tif','COLUMN_PREFIX':'pc_am','OUTPUT':'TEMPORARY_OUTPUT'})
+processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&uid={7481c73a-fd0b-4e88-954d-5c9125dc392e}','RASTERCOPY':'/Users/profbabykangaroo/Downloads/osfstorage-archive/rasters_chw_pierce_county_washington_082724/pierce-county-washington_pm_temp_f.tif','COLUMN_PREFIX':'pc_pm','OUTPUT':'TEMPORARY_OUTPUT'})
+processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&uid={e3215058-bb7d-4822-b396-989b495d2910}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Portland/825b_2.tif','COLUMN_PREFIX':'po_af','OUTPUT':'TEMPORARY_OUTPUT'})
+processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&uid={8d84bb2f-9c13-49ab-b025-4e2ecf5241fa}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Portland/825a_2.tif','COLUMN_PREFIX':'po_am','OUTPUT':'TEMPORARY_OUTPUT'})
+processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&uid={68f998f7-9574-428e-a430-cce2dc07c90e}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Portland/825c_2.tif','COLUMN_PREFIX':'po_pm','OUTPUT':'TEMPORARY_OUTPUT'})
+processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&field=po_pm1:double(0,0)&uid={6b80f4f0-3e1d-4221-bfa6-ad70a94f407d}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Tacoma/tac/tac_af.tif','COLUMN_PREFIX':'tac_af','OUTPUT':'TEMPORARY_OUTPUT'})
+processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&field=po_pm1:double(0,0)&field=tac_af1:double(0,0)&uid={462de0ca-06e3-4cb9-8512-8ba4771b31b6}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Tacoma/tac/tac_am.tif','COLUMN_PREFIX':'tac_am','OUTPUT':'TEMPORARY_OUTPUT'})
+processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&field=po_pm1:double(0,0)&field=tac_af1:double(0,0)&field=tac_am1:double(0,0)&uid={37e9311f-d7ce-46a3-b853-341fecac7df4}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Tacoma/tac/tac_pm.tif','COLUMN_PREFIX':'tac_pm','OUTPUT':'TEMPORARY_OUTPUT'})
+# in the end i had one layer with temperature values for all times/cities/counties for points within those areas
+```
+
+
+# Post-GIS Data Wrangle
+
+## Re-import data after QGIS methods
+
+```{r}
+inat.full.heat <- read.csv("./WRDM-full-9.3.25-qgis-w-heat.csv")
+```
+
+## Join heat data with iNat data
+
+```{r}
+redhot <- left_join(inat.full.heat,inat.full,by="id")
+```
+
+## Subset based on counties
+  
+```{r}
+tac.wrc <- redhot %>% filter(tac_af1>0) %>% mutate(tac.am.c=tac_am1, tac.af.c=tac_af1,tac.pm.c=tac_pm1)
+pc.wrc <- redhot %>% filter(pc_af1>0) %>% mutate(pc.am.f=pc_am1, pc.af.f=pc_af1,pc.pm.f=pc_pm1)
+kc.wrc <- redhot %>% filter(kc_af1>0)  %>% mutate(kc.am.f=kc_am1, kc.af.f=kc_af1,kc.pm.f=kc_pm1)
+pl.wrc <- redhot %>% filter(po_af1>0) %>% mutate(pl.am.c=po_am1, pl.af.c=po_af1,pl.pm.c=po_pm1)
+```
+
+* Number of observations
+  + Tacoma - 1530
+  + Pierce County - 26
+  + King County - 599
+  + Portland - 568
+  
+> Note Tacoma trees overlapping data from king county or pierce county were included in Tacoma dataset instead of king county or pierce county datasets.  King county and pierce county datasets do not include Trees with tacoma data. King county data does not included trees with pierce county data.  
+  
+## Mutate Data (per area)
+
+> Note we needed both f and c temperatures for each area. Tacoma and Portland data were 'sample with raster values' from a dataset in C and King County and Pierce County were sampled from dataset in F.
+
+### daily means
+
+```{r}
+tac.wrc <- tac.wrc %>% mutate(tac.am.f=((tac.am.c*1.8)+32),tac.af.f=((tac.af.c*1.8)+32),tac.pm.f=((tac.pm.c*1.8)+32)) %>% mutate(mean.temp.daily.f=((tac.am.f+tac.af.f+tac.pm.f)/3)) %>% mutate(dist.from.mean.daily.f=mean.temp.daily.f-(mean(mean.temp.daily.f,na.rm=TRUE))) %>% mutate(mean.temp.daily.c=((tac.am.c+tac.af.c+tac.pm.c)/3)) %>% mutate(dist.from.mean.daily.c=mean.temp.daily.c-(mean(mean.temp.daily.c,na.rm=TRUE))) %>% mutate(Area="Tacoma")
+
+pc.wrc <- pc.wrc %>% mutate(pc.am.c=(((pc.am.f-32)*5)/9),pc.af.c=(((pc.af.f-32)*5)/9),pc.pm.c=(((pc.pm.f-32)*5)/9)) %>% mutate(mean.temp.daily.f=((pc.am.f+pc.af.f+pc.pm.f)/3)) %>% mutate(dist.from.mean.daily.f=mean.temp.daily.f-(mean(mean.temp.daily.f,na.rm=TRUE))) %>% mutate(mean.temp.daily.c=((pc.am.c+pc.af.c+pc.pm.c)/3)) %>% mutate(dist.from.mean.daily.c=mean.temp.daily.c-(mean(mean.temp.daily.c,na.rm=TRUE))) %>% mutate(Area="Pierce County")
+
+kc.wrc <- kc.wrc %>% mutate(kc.am.c=(((kc.am.f-32)*5)/9),kc.af.c=(((kc.af.f-32)*5)/9),kc.pm.c=(((kc.pm.f-32)*5)/9)) %>% mutate(mean.temp.daily.f=((kc.am.f+kc.af.f+kc.pm.f)/3)) %>% mutate(dist.from.mean.daily.f=mean.temp.daily.f-(mean(mean.temp.daily.f,na.rm=TRUE))) %>% mutate(mean.temp.daily.c=((kc.am.c+kc.af.c+kc.pm.c)/3)) %>% mutate(dist.from.mean.daily.c=mean.temp.daily.c-(mean(mean.temp.daily.c,na.rm=TRUE))) %>% mutate(Area="King County")
+
+pl.wrc <- pl.wrc %>% mutate(pl.am.f=((pl.am.c*1.8)+32),pl.af.f=((pl.af.c*1.8)+32),pl.pm.f=((pl.pm.c*1.8)+32)) %>% mutate(mean.temp.daily.f=((pl.am.f+pl.af.f+pl.pm.f)/3)) %>% mutate(dist.from.mean.daily.f=mean.temp.daily.f-(mean(mean.temp.daily.f,na.rm=TRUE))) %>% mutate(mean.temp.daily.c=((pl.am.c+pl.af.c+pl.pm.c)/3)) %>% mutate(dist.from.mean.daily.c=mean.temp.daily.c-(mean(mean.temp.daily.c,na.rm=TRUE))) %>% mutate(Area="Portland")
+```
+
+
+### morning means
+
+```{r}
+tac.wrc <- tac.wrc %>% mutate(dist.from.mean.am.c = tac.am.c-(mean(tac.am.c,na.rm=TRUE)),dist.from.mean.am.f=tac.am.f-(mean(tac.am.f,na.rm=TRUE)))
+pc.wrc <- pc.wrc %>% mutate(dist.from.mean.am.c = pc.am.c-(mean(pc.am.c,na.rm=TRUE)),dist.from.mean.am.f=pc.am.f-(mean(pc.am.f,na.rm=TRUE)))
+kc.wrc <- kc.wrc %>% mutate(dist.from.mean.am.c = kc.am.c-(mean(kc.am.c,na.rm=TRUE)),dist.from.mean.am.f=kc.am.f-(mean(kc.am.f,na.rm=TRUE)))
+pl.wrc <- pl.wrc %>%  mutate(dist.from.mean.am.c = pl.am.c-(mean(pl.am.c,na.rm=TRUE)),dist.from.mean.am.f=pl.am.f-(mean(pl.am.f,na.rm=TRUE)))
+```
+
+### afternoon means
+
+```{r}
+tac.wrc <- tac.wrc %>% mutate(dist.from.mean.af.c = tac.af.c-(mean(tac.af.c,na.rm=TRUE)),dist.from.mean.af.f=tac.af.f-(mean(tac.af.f,na.rm=TRUE)))
+pc.wrc <- pc.wrc %>% mutate(dist.from.mean.af.c = pc.af.c-(mean(pc.af.c,na.rm=TRUE)),dist.from.mean.af.f=pc.af.f-(mean(pc.af.f,na.rm=TRUE)))
+kc.wrc <- kc.wrc %>% mutate(dist.from.mean.af.c = kc.af.c-(mean(kc.af.c,na.rm=TRUE)),dist.from.mean.af.f=kc.af.f-(mean(kc.af.f,na.rm=TRUE)))
+pl.wrc <- pl.wrc %>%  mutate(dist.from.mean.af.c = pl.af.c-(mean(pl.af.c,na.rm=TRUE)),dist.from.mean.af.f=pl.af.f-(mean(pl.af.f,na.rm=TRUE)))
+```
+
+
+### evening means
+
+```{r}
+tac.wrc <- tac.wrc %>% mutate(dist.from.mean.pm.c = tac.pm.c-(mean(tac.pm.c,na.rm=TRUE)),dist.from.mean.pm.f=tac.pm.f-(mean(tac.pm.f,na.rm=TRUE)))
+pc.wrc <- pc.wrc %>% mutate(dist.from.mean.pm.c = pc.pm.c-(mean(pc.pm.c,na.rm=TRUE)),dist.from.mean.pm.f=pc.pm.f-(mean(pc.pm.f,na.rm=TRUE)))
+kc.wrc <- kc.wrc %>% mutate(dist.from.mean.pm.c = kc.pm.c-(mean(kc.pm.c,na.rm=TRUE)),dist.from.mean.pm.f=kc.pm.f-(mean(kc.pm.f,na.rm=TRUE)))
+pl.wrc <- pl.wrc %>%  mutate(dist.from.mean.pm.c = pl.pm.c-(mean(pl.pm.c,na.rm=TRUE)),dist.from.mean.pm.f=pl.pm.f-(mean(pl.pm.f,na.rm=TRUE)))
+```
+
+
+## Merge Data (merge areas)
+
+```{r}
+data <- bind_rows(tac.wrc,pc.wrc,kc.wrc,pl.wrc)
+```
+
+
+## Clean Data
+
+Some of the iNat project questions changed since it was created so some we need to adjust the answers to be more consistent throughout the project. 
+
+### Clean iNaturalist Fields
+
+```{r}
+data$field.number.of.additional.unhealthy.trees..of.same.species..in.area..within.sight. <- as.factor(data$field.number.of.additional.unhealthy.trees..of.same.species..in.area..within.sight.)
+data$field.optional...what..other.factors..were.observed. <- as.factor(data$field.optional...what..other.factors..were.observed.)
+data$field.tree.canopy.symptoms <- as.factor(data$field.tree.canopy.symptoms)
+data$field.optional...slope.position <- as.factor(data$field.optional...slope.position)
+data$field.optional...site.type <- as.factor(data$field.optional...site.type)
+data$field.optional...site.location.description  <- as.factor(data$field.optional...site.location.description )
+data$field.optional...tree.size <-as.factor(data$field.optional...tree.size)
+```
+
+
+```{r}
+data$field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.[data$field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.==""] <- "Not sure"
+data$field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.[data$field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.=="Unsure"] <- "Not sure"
+```
+
+
+```{r}
+data$field.number.of.additional.unhealthy.trees..of.same.species..in.area..within.sight.[data$field.number.of.additional.unhealthy.trees..of.same.species..in.area..within.sight.=="4"] <- "4-6"
+data$field.number.of.additional.unhealthy.trees..of.same.species..in.area..within.sight.[data$field.number.of.additional.unhealthy.trees..of.same.species..in.area..within.sight.=="5"] <- "4-6"
+data$field.number.of.additional.unhealthy.trees..of.same.species..in.area..within.sight.[data$field.number.of.additional.unhealthy.trees..of.same.species..in.area..within.sight.=="2"] <- "2-3"
+```
+
+
+```{r}
+data$field.tree.canopy.symptoms[data$field.tree.canopy.symptoms=="Multiple Symptoms"] <-"Multiple Symptoms (please list in Notes)"
+data$field.tree.canopy.symptoms[data$field.tree.canopy.symptoms=="multiple symptoms"] <-"Multiple Symptoms (please list in Notes)"
+data$field.tree.canopy.symptoms[data$field.tree.canopy.symptoms=="thinning foliage"] <-"Thinning Canopy"
+data$field.tree.canopy.symptoms[data$field.tree.canopy.symptoms=="healthy"] <-"Healthy"
+data$field.tree.canopy.symptoms[data$field.tree.canopy.symptoms=="dead top"] <-"Old Dead Top (needles already gone)"
+```
+
+
+```{r}
+data$field.optional...what..other.factors..were.observed.[data$field.optional...what..other.factors..were.observed.=="Fungal Activitiy (mycelial fans, mushrooms at base, or conks on trunk)"] <-"Fungal Activitiy (mycelial fans, bleeding cankers, mushrooms at base, or conks on trunk)"
+data$field.optional...what..other.factors..were.observed.[data$field.optional...what..other.factors..were.observed.=="Needle disease (dieback, checking, blight, etc.)"] <- "Needle or leaf disease (dieback, checking, blight, etc.)"
+```
+
+
+```{r}
+data$field.optional...slope.position[data$field.optional...slope.position=="Upper 1/3rd of a slope"] <-"Top of slope"
+```
+
+
+```{r}
+data$field.optional...site.type[data$field.optional...site.type=="Urban Natural"] <-"Urban"
+data$field.optional...site.type[data$field.optional...site.type=="Urban Landscaped"] <-"Urban"
+data$field.optional...site.type[data$field.optional...site.type=="Suburban Natural"] <-"Suburban"
+data$field.optional...site.type[data$field.optional...site.type=="Suburban Lanscaped"] <-"Suburban"
+data$field.optional...site.type[data$field.optional...site.type=="Natural Forest"] <-"Rural"
+```
+
+
+```{r}
+data$field.optional...tree.size[data$field.optional...tree.size=="Large"] <- "Large (too big to wrap arms around trunk)"
+data$field.optional...tree.size[data$field.optional...tree.size=="Medium"] <- "Medium (can wrap arms around trunk)"
+data$field.optional...tree.size[data$field.optional...tree.size=="Small"] <- "Small (can wrap hands around trunk)"
+data$field.optional...tree.size[data$field.optional...tree.size=="Very Large"] <- "Very Large (would take many people to wrap arms around trunk)"
+data$field.optional...tree.size[data$field.optional...tree.size=="Very small (can wrap a single hand around stem)"] <- "Very Small (can wrap a single hand around stem)"
+```
+
+
+```{r}
+data$field.optional...site.location.description [data$field.optional...site.location.description =="Yard or open park grounds"] <- "Urban yard or open park grounds"
+```
+
+### Reclassify co-factors
+
+```{r}
+data$field.percent.canopy.affected.... <- as.factor(data$field.percent.canopy.affected....)
+data$field.percent.canopy.affected....[data$field.percent.canopy.affected....=="1-25% of the crown is unhealthy"] <- "1-29% of the canopy is unhealthy"
+data$field.percent.canopy.affected....[data$field.percent.canopy.affected....=="Healthy (0%)"] <- "Healthy, no dieback(0%)"
+data$field.percent.canopy.affected....[data$field.percent.canopy.affected....=="Healthy (0% is unhealthy)"] <- "Healthy, no dieback(0%)"
+data$field.percent.canopy.affected....[data$field.percent.canopy.affected....=="more than 75% of the crown is unhealthy"] <- "60-99% of the canopy is unhealthy"
+data <- data %>% droplevels()
+
+data$Percent.Dieback.Modified[data$field.percent.canopy.affected....=="Healthy, no dieback(0%)"] <- 0
+data$Percent.Dieback.Modified[data$field.percent.canopy.affected....=="1-29% of the canopy is unhealthy"] <- 1
+data$Percent.Dieback.Modified[data$field.percent.canopy.affected....=="30-59% of the canopy is unhealthy"] <- 30
+data$Percent.Dieback.Modified[data$field.percent.canopy.affected....=="60-99% of the canopy is unhealthy"] <- 60
+data$Percent.Dieback.Modified[data$field.percent.canopy.affected....=="tree is dead"] <- 100
+#data$field.dieback.percent[is.na(data$field.dieback.percent)] <- data$Percent.Dieback.Modified
+
+data$field.percent.canopy.affected....[data$Percent.Dieback.Modified==100] <- "tree is dead" #there were a couple healthy trees with 100 dieback somehow..
+
+str(data$field.dieback.percent)
+
+has.dieback.percent <- data %>% filter(field.dieback.percent!="")
+does.not.have.dieback.percent <- data %>% filter(field.dieback.percent=="") 
+
+has.dieback.percent$user.estimated.dieback <- "Yes"
+does.not.have.dieback.percent$user.estimated.dieback <- "No"
+
+does.not.have.dieback.percent$field.dieback.percent <- does.not.have.dieback.percent$Percent.Dieback.Modified
+
+data <- rbind(has.dieback.percent,does.not.have.dieback.percent)
+
+data$field.dieback.percent[data$field.dieback.percent<0] <- 0 # not sure why but there was one -2 percent dieback value
+
+```
+
+
+
+```{r}
+data <- data %>% mutate(tree.size.simplified=field.optional...tree.size) 
+```
+
+```{r}
+tree_size_level_key <- c("Very Small (can wrap a single hand around stem)" = "Small", "Small (can wrap hands around trunk)" = "Small", "Medium (can wrap arms around trunk)" = "Medium", "Large (too big to wrap arms around trunk)" = "Large", "Very Large (would take many people to wrap arms around trunk)" = "Large","Other"="Other","No selection"="No Selection")
+
+data$tree.size.simplified <- recode_factor(data$tree.size.simplified, !!!tree_size_level_key)
+data$tree.size.simplified <- as.factor(data$tree.size.simplified)
+```
+
+
+### Reclassify response category variables
+
+```{r}
+data <- data %>% filter(field.tree.canopy.symptoms!="Candelabra top or very old spike top (old growth)") %>% mutate(binary.tree.canopy.symptoms=field.tree.canopy.symptoms) %>% mutate(ordinal.tree.canopy.symptoms=field.tree.canopy.symptoms) %>% mutate(reclassified.tree.canopy.symptoms=field.tree.canopy.symptoms) %>% droplevels()
+```
+
+
+```{r}
+binary_level_key <- c("Healthy" = "Healthy", "Thinning Canopy" = "Unhealthy", "New Dead Top (red or brown needles still attached)" = "Unhealthy", "Old Dead Top (needles already gone)" = "Unhealthy", "Tree is dead" = "Unhealthy", "Multiple Symptoms (please list in Notes)" = "Unhealthy", "Extra Cone Crop" = "Unhealthy", "Browning Canopy" = "Unhealthy","Branch Dieback or 'Flagging'" = "Unhealthy", "Other (please describe in Notes)" = "Unhealthy", "Yellowing Canopy" = "Unhealthy")
+
+data$binary.tree.canopy.symptoms <- recode_factor(data$binary.tree.canopy.symptoms, !!!binary_level_key)
+#levels(binary$field.tree.canopy.symptoms)
+data$binary.tree.canopy.symptoms <- as.factor(data$binary.tree.canopy.symptoms)
+```
+
+
+```{r}
+ordinal_level_key <- c("Healthy" = "Healthy", "Thinning Canopy" = "Unhealthy", "New Dead Top (red or brown needles still attached)" = "Unhealthy", "Old Dead Top (needles already gone)" = "Unhealthy", "Tree is dead" = "Dead", "Multiple Symptoms (please list in Notes)" = "Unhealthy", "Extra Cone Crop" = "Unhealthy", "Browning Canopy" = "Unhealthy","Branch Dieback or 'Flagging'" = "Unhealthy", "Other (please describe in Notes)" = "Unhealthy", "Yellowing Canopy" = "Unhealthy")
+
+data$ordinal.tree.canopy.symptoms <- recode_factor(data$ordinal.tree.canopy.symptoms, !!!ordinal_level_key)
+#levels(binary$field.tree.canopy.symptoms)
+data$ordinal.tree.canopy.symptoms <- as.factor(data$ordinal.tree.canopy.symptoms)
+```
+
+
+```{r}
+reclassified_level_key <- c("Healthy" = "Healthy", "Thinning Canopy" = "Thinning Canopy", "New Dead Top (red or brown needles still attached)" = "Dead Top", "Old Dead Top (needles already gone)" = "Dead Top", "Tree is dead" = "Tree is Dead", "Multiple Symptoms (please list in Notes)" = "Other", "Extra Cone Crop" = "Other", "Browning Canopy" = "Other","Branch Dieback or 'Flagging'" = "Other", "Other (please describe in Notes)" = "Other", "Yellowing Canopy" = "Other")
+
+data$reclassified.tree.canopy.symptoms <- recode_factor(data$reclassified.tree.canopy.symptoms, !!!reclassified_level_key)
+#levels(binary$field.tree.canopy.symptoms)
+data$reclassified.tree.canopy.symptoms <- as.factor(data$reclassified.tree.canopy.symptoms)
+```
+
+Create Binary response for dead top
+
+```{r}
+data$top.dieback[data$reclassified.tree.canopy.symptoms=="Dead Top"] <- "Yes"
+data$top.dieback[data$reclassified.tree.canopy.symptoms!="Dead Top"] <- "No"
+data$top.dieback <- as.factor(data$top.dieback)
+levels(data$top.dieback)
+summary(data$top.dieback)
+```
+
+Create Binary response for thinning
+
+```{r}
+data$thinning[data$reclassified.tree.canopy.symptoms=="Thinning Canopy"] <- "Yes"
+data$thinning[data$reclassified.tree.canopy.symptoms!="Thinning Canopy"] <- "No"
+data$thinning <- as.factor(data$thinning)
+levels(data$thinning)
+summary(data$thinning)
+```
+
+Create Binary response for dead
+
+```{r}
+data$dead[data$reclassified.tree.canopy.symptoms=="Tree is Dead"] <- "Yes"
+data$dead[data$reclassified.tree.canopy.symptoms!="Tree is Dead"] <- "No"
+data$dead <- as.factor(data$dead)
+levels(data$dead)
+summary(data$dead)
+```
+
+
+## Mutate Merged Data
+
+### Convert Percent to Proportion
+
+
+
+```{r}
+data$field.dieback.percent <- as.numeric(data$field.dieback.percent)
+data <- data %>% mutate(field.dieback.prop = (field.dieback.percent/100))
+```
+
+
+## Filter Merged Data
+
+### Remove other species
+
+A few observations were not identified to species or were determined to be other species by the iNat community. Two observations were "Thuja" and were kept in the dataset. 
+
+```{r}
+levels(as.factor(data$scientific_name))
+```
+
+```{r}
+other.species <- data %>% filter(scientific_name!="Thuja plicata") %>% filter(scientific_name!="Thuja") %>% droplevels()
+data <- data %>% filter(scientific_name=="Thuja plicata" | scientific_name=="Thuja") %>% droplevels()
+```
+
+> **`r length(other.species$scientific_name)`** observations were identified as other species by the iNaturalist community or were not identified to species. 
+
+
+### check for outliers
+
+Check bservations to see if any are more than +/- 5 degrees C from mean.
+
+```{r}
+ggplot(data,aes(dist.from.mean.af.c,field.dieback.percent))+geom_point()+theme_bw()
+```
+
+
+
+### Export Modified Data
+
+```{r}
+write.csv(data,file="./urban-data-modified.csv")
+```
+
+[urban-data-modified.csv](./urban-data-modified.csv)
+
+Please use this data in analyses. Please make any changes or corrections to the data in this R markdown so everyone is using the same dataset in the analyses.
+
+
+

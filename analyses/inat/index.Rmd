@@ -1,0 +1,164 @@
+---
+title: "iNaturalist Data Summaries"
+date: "2025-09-29"
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(gghalves)
+library(patchwork)
+library(scales)
+```
+
+# iNATURALIST
+
+# Purpose
+
+The purpose of this page is to provide summaries of the data from the WRDM observations included in these [analyses](https://jmhulbert.github.io/redhot/analyses).
+
+# Data
+
+iNaturalist data were downloaded from the [Western Redcedar Dieback Map](https://www.inaturalist.org/projects/western-redcedar-dieback-map) on 1.13.24.
+
+```{r}
+data <- read.csv("./data/urban-data.modified.csv")
+```
+
+# Wrangle Data 
+
+
+## Remove Dead Trees
+
+`r nrow(data)` trees were shared by community scientists in the WRDM project in areas with UHI data between 2020-2023. 
+
+`r nrow(data[data$field.tree.canopy.symptoms=="Tree is dead",])` dead trees were included. 
+
+
+```{r}
+data.w.dead <- data
+```
+
+
+```{r}
+data <- data %>% filter(field.tree.canopy.symptoms!="Tree is dead") %>% filter(field.dieback.percent<100) %>% droplevels()
+```
+
+```{r}
+data$field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.[data$field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.==""] <- "Not sure"
+data$field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.[data$field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.=="Unsure"] <- "Not sure"
+```
+
+
+```{r}
+hoyt.data <- data.w.dead %>% filter(str_detect(place_guess, "Hoyt") |str_detect(place_guess, "hoyt"))
+```
+
+`r nrow(hoyt.data)` trees were added from Hoyt Arboretum.
+
+## Remove Hoyt Trees
+
+```{r}
+data <- data %>% filter(!str_detect(place_guess, "Hoyt") & !str_detect(place_guess, "hoyt"))
+```
+
+`r nrow(data)` observations were included in analyses after removing dead trees and trees from hoyt.
+
+
+# Data Summaries
+
+## Observations
+
+### Number of Obs. Per Area
+
+```{r}
+data %>% group_by(Area) %>% summarize(n.obs=n())
+```
+
+
+
+
+
+
+## Community Scientists
+
+### Number of Obs.
+
+```{r}
+users <- data %>% group_by(user_login) %>% summarize(n=n()) %>% arrange(desc(n))
+users
+```
+
+`r nrow(users[users$n==1,])` users only added one observation, but `r nrow(users[users$n>1,])` users added at least two observations, including `r nrow(users[users$n>10,])` who added more than 10, with one person adding as many as 233. 
+
+
+### Number of Community Scientists
+
+```{r}
+data %>% group_by(Area) %>% summarize(n.participants=n_distinct(user_id),n.obs=n())
+```
+
+
+## Tree Health
+
+### Number of Obs. Per Health Category
+
+```{r}
+data %>% group_by(reclassified.tree.canopy.symptoms) %>% summarize(n.obs=n())
+```
+
+### Number of Obs. per Health Category and Area
+
+```{r}
+area.obs.health <- data %>% group_by(Area,reclassified.tree.canopy.symptoms) %>% summarize(n.obs=n())
+area.obs.health
+```
+
+```{r fig.height=5, fig.width=10}
+ggplot(area.obs.health,aes(reclassified.tree.canopy.symptoms,n.obs,fill=reclassified.tree.canopy.symptoms))+facet_wrap(~Area)+geom_col()+coord_flip()+guides(fill="none")+theme_bw()+labs(x="Tree Canopy Symptoms",y="Number of Observations")+geom_text(aes(label=n.obs),nudge_y=20)
+```
+
+## Other Factors
+
+
+### Signs (y/n)
+
+
+```{r}
+data %>% group_by(field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.) %>% summarize(n.obs=n())
+```
+
+
+
+
+```{r}
+obs.signs <- data %>% group_by(field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.) %>% summarize(n.obs=n())
+obs.signs
+```
+
+
+```{r fig.height=5, fig.width=10}
+ggplot(obs.signs,aes(field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.,n.obs,fill=field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.))+geom_col()+coord_flip()+guides(fill="none")+theme_bw()+labs(x="Signs or Symptoms Observed",y="Number of Observations")+geom_text(aes(label=n.obs),nudge_y=15)
+```
+
+### Factors
+
+```{r}
+obs.factors <- data %>% filter(field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.!="No") %>% group_by(field.optional...what..other.factors..were.observed.) %>% summarize(n.obs=n())
+obs.factors
+```
+
+```{r fig.height=5, fig.width=10}
+ggplot(obs.factors,aes(field.optional...what..other.factors..were.observed.,n.obs,fill=field.optional...what..other.factors..were.observed.))+geom_col()+coord_flip()+guides(fill="none")+theme_bw()+labs(x="Other Factor",y="Number of Observations")+geom_text(aes(label=n.obs),nudge_y=15)
+```

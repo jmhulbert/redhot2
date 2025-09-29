@@ -1,0 +1,29 @@
+---
+title: "Welcome"
+output: html_document
+date: "2025-09-03"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Welcome
+
+Welcome to the 2.0 version of the redhot analyses. 
+
+
+# Purpose
+
+The purpose of this repository is to document the analyses completed for the urban redcedar heat study. 
+
+
+
+# Softwares
+
+* All data wrangling and analyses were completed with 
+  + R version 4.5.1 (2025-06-13)
+  + R Studio 2025.05.1
+  + QGIS-LTR 3.40-5-Bratislava
+  
+  
