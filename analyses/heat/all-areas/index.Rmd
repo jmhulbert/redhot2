@@ -1,0 +1,701 @@
+---
+title: "Binomial Distribution Response to Urban Heat - all areas"
+date: "2025-09-29"
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+
+library(tidyverse)
+library(corrplot)
+library(knitr)
+library(kableExtra)
+library(gghalves)
+library(patchwork)
+library(scales)
+library(glmmTMB)
+library(bbmle)
+library(DHARMa)
+```
+
+# ALL AREAS
+
+# Purpose
+
+The purpose of this page is to summarize an investigation of **tree health categories** as a *categorical* response to urban heat (temperatures).
+
+Response variable: category: *healthy, unhealthy*
+
+
+# Data Wrangling
+
+```{r}
+data <- read.csv('https://raw.githubusercontent.com/jmhulbert/redhot2/refs/heads/main/data/urban-data-modified.csv')
+```
+
+## Remove dead trees
+
+```{r}
+# Remove Dead Trees
+data.w.dead <- data 
+data <- data %>% filter(field.tree.canopy.symptoms!="Tree is dead") %>% filter(field.dieback.percent<100) %>% droplevels()
+```
+
+```{r}
+data$binary.tree.canopy.symptoms <- as.factor(data$binary.tree.canopy.symptoms)
+levels(data$binary.tree.canopy.symptoms)
+```
+
+## Remove observations from Hoyt
+
+```{r}
+data <- data %>% filter(!str_detect(place_guess, "Hoyt") & !str_detect(place_guess, "hoyt"))
+```
+
+
+# Data Visualization
+
+## Binary Tree Condition Categories
+
+```{r}
+ggplot(data,aes(binary.tree.canopy.symptoms))+geom_histogram(stat="count")+theme_bw()+coord_flip()
+```
+
+```{r}
+p1 <-ggplot(data,aes(binary.tree.canopy.symptoms,dist.from.mean.af.c, fill=binary.tree.canopy.symptoms ))+geom_boxplot(alpha=0.5)+theme_bw()+coord_flip() + scale_fill_manual(name="Tree Condition",values=c("#7fcdbb","#fe9929"))+guides(fill=FALSE) +labs(x="Tree Condition",y=NULL)
+```
+
+```{r}
+p2 <-ggplot(data,aes(dist.from.mean.af.c,fill=binary.tree.canopy.symptoms))+geom_density(alpha=0.5) + scale_fill_manual(name="Tree Condition",values=c("#7fcdbb","#fe9929")) +theme_bw() +labs(x="Distance from Mean Afternoon Temperature") +guides(fill=FALSE)
+```
+
+```{r}
+p1 / p2
+```
+
+## Reclassified Tree Condition Categories
+
+```{r}
+ggplot(data,aes(reclassified.tree.canopy.symptoms))+geom_histogram(stat="count")+theme_bw()+coord_flip()
+```
+
+```{r}
+data$top.dieback <- as.factor(data$top.dieback)
+data$thinning <- as.factor(data$thinning)
+```
+
+```{r}
+ggplot(data,aes(reclassified.tree.canopy.symptoms,dist.from.mean.af.c ))+geom_boxplot()+theme_bw()+coord_flip()
+```
+
+## Temp and Site Type
+
+```{r}
+king <- data %>% filter(Area=="King County")
+```
+
+```{r}
+king <- king %>% filter(field.optional...site.type=="Urban"|field.optional...site.type=="Suburban"|field.optional...site.type=="Rural")
+```
+
+```{r}
+ggplot(king,aes(field.optional...site.type,dist.from.mean.af.c ))+geom_boxplot()+theme_bw()+coord_flip()
+```
+
+
+# Analyses
+
+## Time Series Model Fit
+
+```{r}
+binomial.daily <- glmmTMB(binary.tree.canopy.symptoms ~ dist.from.mean.daily.c + (1|Area),family=binomial,data=data)
+binomial.am <- glmmTMB(binary.tree.canopy.symptoms ~ dist.from.mean.am.c + (1|Area),data=data,family=binomial)
+binomial.af <- glmmTMB(binary.tree.canopy.symptoms ~ dist.from.mean.af.c + (1|Area),data=data,family=binomial)
+binomial.pm <- glmmTMB(binary.tree.canopy.symptoms ~ dist.from.mean.pm.c + (1|Area),data=data,family=binomial)
+```
+
+### Compare Time Series Models
+
+```{r}
+AICtab(binomial.daily,binomial.am,binomial.af,binomial.pm)
+```
+
+Afternoon heat was the best fit.
+
+## Response 1.0: healthy / unhealthy
+
+```{r}
+#binomial.af <- glmmTMB(binary.tree.canopy.symptoms ~ dist.from.mean.af.c + (1|Area),data=data,family=binomial)
+```
+
+### Summary
+
+```{r}
+summary(binomial.af)
+```
+
+Tree health is associated with urban heat. The probability of success (tree categorized as unhealthy) increases with urban heat.
+
+Unhealthy trees are considered success (1) because it is the second level (*see levels() output below*). The probability of failure (0) is the first level (Healthy).
+
+```{r}
+levels(data$binary.tree.canopy.symptoms)
+```
+
+The probability of a tree being classified as unhealthy increases with urban temperature. 
+
+
+```{r}
+#predict(binomial.af,data[data$DN_AF1=0,])
+#predict(binomial.af,DN_AF1=0)
+```
+
+
+
+
+### Visualize effects of predictors
+
+First, generate predictions from model
+
+```{r}
+# Create a data frame for predictions
+new.data <- expand.grid(
+  dist.from.mean.af.c = seq(min(data$dist.from.mean.af.c), max(data$dist.from.mean.af.c), length.out = 100),  # keeping predictor2 constant at its mean
+  Area = 0  # assuming random effect is zero for prediction
+)
+```
+
+```{r}
+new.data$predicted_response <- predict(binomial.af, newdata = new.data, type = "response")
+```
+
+```{r}
+p1 <- ggplot(new.data, aes(x = dist.from.mean.af.c, y = predicted_response)) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  labs(x = "Distance from mean (C)", y = "Predicted Response") + theme_minimal()
+p1
+```
+
+```{r}
+# Create a data frame for predictions
+new.data.2.inf <- expand.grid(
+  dist.from.mean.af.c = seq(min(data$dist.from.mean.af.c), max(100), length.out = 1000), Area = 0)  # keeping predictor2 constant at its mean
+```
+
+```{r}
+new.data.2.inf$predicted_response <- predict(binomial.af, newdata = new.data.2.inf, type = "response")
+```
+
+
+```{r}
+p2 <- ggplot(new.data.2.inf, aes(x = dist.from.mean.af.c, y = predicted_response)) +geom_smooth(method = "glm", method.args = list(family = "binomial")) + labs(x = "Distance from mean (C)", y = "Predicted Response") + scale_x_continuous(limits = c(-10, 60)) +theme_minimal()
+p2
+```
+
+
+```{r}
+p1 + p2
+```
+
+### Probabilities based on predictions
+
+#### Probability when standardized temperature value is -2
+
+```{r}
+new_data <- data.frame(dist.from.mean.af.c = -2,Area=0)
+predicted_response <- predict(binomial.af, newdata = new_data, type = "response")
+print(predicted_response)
+```
+
+
+Not sure how to intrepret this. There is still a 0.26 probability of being categorized as unhealthy at -2C? 
+
+
+#### Probability when standardized temperature value is 0
+
+```{r}
+new_data <- data.frame(dist.from.mean.af.c = 0,Area=0)
+predicted_response <- predict(binomial.af, newdata = new_data, type = "response")
+print(predicted_response)
+```
+
+
+The probability of being categorized as unhealthy is 0.33 at the mean temperature. 
+
+
+#### Probability when standardized temperature value is 2
+
+```{r}
+new_data <- data.frame(dist.from.mean.af.c = 2,Area=0)
+predicted_response <- predict(binomial.af, newdata = new_data, type = "response")
+print(predicted_response)
+```
+
+**The probability of tree being classified as unhealthy increases with distance from mean af**
+
+## Response 2.0: healthy / top-dieback 
+
+```{r}
+data.top <- data %>% filter(reclassified.tree.canopy.symptoms=="Healthy"|reclassified.tree.canopy.symptoms=="Dead Top") %>% droplevels()
+```
+
+
+```{r}
+top.dieback.binomial.af <- glmmTMB(top.dieback ~ dist.from.mean.af.c + (1|Area),data=data.top,family=binomial)
+```
+
+### Summary
+
+```{r}
+summary(top.dieback.binomial.af)
+```
+
+Tree health is associated with urban heat. The probability of success (tree categorized as having a dead top) increases with urban heat.
+
+Trees having a dead top is considered success (1) because it is the second level (*see levels() output below*). The probability of failure (0) is the first level (Healthy / no top dieback).
+
+```{r}
+levels(data$top.dieback)
+```
+
+```{r}
+p3 <-ggplot(data,aes(top.dieback,dist.from.mean.af.c, fill=top.dieback ))+geom_boxplot(alpha=0.5)+theme_bw()+coord_flip() + scale_fill_manual(name="Top Dieback",values=c("#7fcdbb","#fe9929"))+guides(fill=FALSE) +labs(x="Top Dieback",y=NULL)
+```
+
+```{r}
+p4 <-ggplot(data,aes(dist.from.mean.af.c,fill=top.dieback))+geom_density(alpha=0.5) + scale_fill_manual(name="Top Dieback",values=c("#7fcdbb","#fe9929")) +theme_bw() +labs(x="Distance from Mean Afternoon Temperature") +guides(fill=FALSE)
+```
+
+```{r}
+p3 / p4
+```
+
+**The probability of a tree having top dieback increases with urban temperature.** 
+
+### Visualize effects of predictors
+
+```{r}
+# Create a data frame for predictions
+new.data.2 <- expand.grid(
+  dist.from.mean.af.c = seq(min(data$dist.from.mean.af.c), max(data$dist.from.mean.af.c), length.out = 100),  # keeping predictor2 constant at its mean
+  Area = 0  # assuming random effect is zero for prediction
+)
+```
+
+```{r}
+new.data.2$predicted_response <- predict(top.dieback.binomial.af, newdata = new.data.2, type = "response")
+```
+
+```{r}
+ggplot(new.data.2, aes(x = dist.from.mean.af.c, y = predicted_response)) +
+ geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  labs(x = "Distance from Mean Temperature", y = "Predicted Response") +
+  theme_minimal()
+```
+
+### Probabilities based on predictions
+
+
+#### Probability when standardized temperature (dist from mean) value is 0
+
+```{r}
+new_data <- data.frame(dist.from.mean.af.c = 0,Area=0)
+predicted_response <- predict(top.dieback.binomial.af, newdata = new_data, type = "response")
+print(predicted_response)
+```
+
+#### Probability when standardized temperature (dist from mean) value is 2
+
+```{r}
+new_data <- data.frame(dist.from.mean.af.c = 2,Area=0)
+predicted_response <- predict(top.dieback.binomial.af, newdata = new_data, type = "response")
+print(predicted_response)
+```
+
+
+
+
+
+## Response 3.0: healthy / thinning
+
+```{r}
+data.thin <- data %>% filter(reclassified.tree.canopy.symptoms=="Healthy"|reclassified.tree.canopy.symptoms=="Thinning Canopy") %>% droplevels()
+```
+
+```{r}
+thinning.binomial.af <- glmmTMB(thinning ~ dist.from.mean.af.c + (1|Area),data=data.thin,family=binomial)
+```
+
+### Summary
+
+```{r}
+summary(thinning.binomial.af)
+```
+
+Tree health is associated with urban heat. The probability of success (tree categorized as unhealthy) increases with urban heat
+
+Unhealthy trees are considered success (1) because it is the second level. The probability of failure (0) is the first level (Healthy).
+
+```{r}
+levels(data$thinning)
+```
+
+The probability of a tree being classified as unhealthy increases with urban temperature. 
+
+### Visualize effects of predictors
+
+First, generate predictions from model
+
+```{r}
+# Create a data frame for predictions
+new.data.3 <- expand.grid(
+  dist.from.mean.af.c = seq(min(data$dist.from.mean.af.c), max(data$dist.from.mean.af.c), length.out = 100),  # keeping predictor2 constant at its mean
+  Area = 0  # assuming random effect is zero for prediction
+)
+```
+
+```{r}
+new.data.3$predicted_response <- predict(thinning.binomial.af, newdata = new.data.3, type = "response")
+```
+
+```{r}
+ggplot(new.data.3, aes(x = dist.from.mean.af.c, y = predicted_response)) +
+ geom_smooth(method = "glm", method.args = list(family = "binomial")) +
+  labs(x = "Distance from Mean Temperature", y = "Predicted Response") +
+  theme_minimal()
+```
+
+
+### Compare models  
+
+#### Odds Ratios
+
+Unhealthy Trees
+
+```{r}
+
+# Unhealthy Overall
+coef(binomial.af)
+exp(0.1644819)
+```
+
+Top Dieback
+
+```{r}
+# Top Dieback
+coef(top.dieback.binomial.af)
+exp(0.4660774)
+```
+
+
+Thinning
+
+```{r}
+# Thinning
+coef(thinning.binomial.af)
+exp(0.1195909)
+```
+
+
+> "An odds ratio greater than 1 implies that the predictor increases the odds of the outcome." 
+
+Heat had the largest effect on predicting if trees had top dieback
+
+
+## Models with Co-Factors
+
+Note the models below were tested on filtered data. Data categorized as 'No Selection', 'Other' or blank were filtered out. 
+
+
+
+### Co-Factor Model 1: adding size
+
+#### Visualize co-factor
+
+```{r}
+data.size.filter <- data %>% filter(tree.size.simplified!="" & tree.size.simplified!="No Selection"  & tree.size.simplified!="Other")
+levels(as.factor(data.size.filter$tree.size.simplified))
+```
+
+`r nrow(data) - nrow(data.size.filter)` were removed from the data. `r nrow(data.size.filter)` observations were used in below the co-factor model adding size below.
+
+```{r}
+ggplot(data.size.filter,aes(tree.size.simplified))+geom_histogram(stat="count")+coord_flip()+theme_bw()
+```
+
+##### All Trees
+
+```{r}
+ggplot(data.size.filter,aes(binary.tree.canopy.symptoms)) +facet_wrap(~tree.size.simplified) +geom_histogram(stat="count")+theme_bw()+coord_flip()
+```
+
+
+##### Trees with Dead Tops
+
+```{r}
+ggplot(data.size.filter,aes(top.dieback)) +facet_wrap(~tree.size.simplified) +geom_histogram(stat="count")+theme_bw()+coord_flip()
+```
+
+##### Thinning Trees
+
+```{r}
+ggplot(data.size.filter,aes(thinning)) +facet_wrap(~tree.size.simplified) +geom_histogram(stat="count")+theme_bw()+coord_flip()
+```
+
+
+
+#### Response 1.1 healthy / unhealthy
+
+```{r}
+binomial.af.size <- glmmTMB(binary.tree.canopy.symptoms ~ dist.from.mean.af.c +  tree.size.simplified +(1|Area),data=data.size.filter,family=binomial)
+```
+
+##### Overall Effect
+
+```{r}
+# Fit the reduced model (without site location description)
+reduced_model.binomial.size <- glmmTMB(binary.tree.canopy.symptoms ~ dist.from.mean.af.c + (1 | Area), 
+                       data = data.size.filter, 
+                       family = binomial)
+
+# Perform a likelihood ratio test
+anova(reduced_model.binomial.size, binomial.af.size, test = "Chisq")
+```
+
+##### Model Summary
+
+
+
+
+```{r}
+summary(binomial.af.size)
+```
+
+
+#### Response 2.1 healthy / top-dieback 
+
+```{r}
+data.top.size <- data.size.filter %>% filter(reclassified.tree.canopy.symptoms=="Healthy"|reclassified.tree.canopy.symptoms=="Dead Top") %>% droplevels()
+```
+
+```{r}
+top.dieback.binomial.af.size <- glmmTMB(top.dieback ~ dist.from.mean.af.c + tree.size.simplified + (1|Area),data=data.top.size,family=binomial)
+```
+
+##### Overall Effect
+
+```{r}
+# Fit the reduced model (without site location description)
+reduced_model.top.size <- glmmTMB(top.dieback ~ dist.from.mean.af.c + (1 | Area), 
+                       data = data.top.size, 
+                       family = binomial)
+
+# Perform a likelihood ratio test
+anova(reduced_model.top.size, top.dieback.binomial.af.size, test = "Chisq")
+```
+
+The significant p-value (0.007025) from the Chi-Square test indicates that adding tree.size.simplified to the model significantly improves the fit. The reduction in AIC (from 433.74 to 427.83) also supports the inclusion of tree size as a meaningful predictor for top dieback. Despite a slight increase in BIC, the overall improvement in model fit justifies including tree.size.simplified in the model.
+
+##### Model Summary
+
+```{r}
+summary(top.dieback.binomial.af.size)
+```
+
+The estimate for medium-sized trees is 0.85568, which means that, holding other variables constant, medium-sized trees have a higher log-odds of top dieback compared to large trees (the reference category).
+
+The p-value (0.00159) indicates that this effect is statistically significant at the 1% level. This suggests that medium-sized trees are more likely to experience top dieback than large trees.
+
+
+#### Response 3.1 healthy / thinning
+
+```{r}
+data.thin.size <- data.size.filter %>% filter(reclassified.tree.canopy.symptoms=="Healthy"|reclassified.tree.canopy.symptoms=="Thinning Canopy") %>% droplevels()
+```
+
+```{r}
+thinning.binomial.af.size <- glmmTMB(thinning ~ dist.from.mean.af.c + tree.size.simplified + (1|Area),data=data.thin.size,family=binomial)
+```
+
+##### Overall Effect
+
+```{r}
+# Fit the reduced model (without site location description)
+reduced_model.thin.size <- glmmTMB(thinning ~ dist.from.mean.af.c + (1 | Area), 
+                       data = data.thin.size, 
+                       family = binomial)
+
+# Perform a likelihood ratio test
+anova(reduced_model.thin.size, thinning.binomial.af.size, test = "Chisq")
+```
+
+##### Model Summary
+
+```{r}
+summary(thinning.binomial.af.size)
+```
+
+
+### Co-Factor Model 2: adding location
+
+#### Visualize co-factor
+
+```{r}
+data.site.filter <- data %>% filter(field.optional...site.location.description!="" & field.optional...site.location.description!="No Selection" & field.optional...site.location.description!="Other" & field.optional...site.location.description!="Not Sure") %>% droplevels()
+levels(as.factor(data.site.filter$field.optional...site.location.description))
+```
+
+`r nrow(data) - nrow(data.site.filter)` were removed from the data. `r nrow(data.site.filter)` observations were used in below the co-factor model adding size below.
+
+```{r}
+ggplot(data.site.filter,aes(field.optional...site.location.description))+geom_histogram(stat="count")+coord_flip()+theme_bw()
+```
+
+##### All Trees
+
+```{r}
+ggplot(data.site.filter,aes(binary.tree.canopy.symptoms)) +facet_wrap(~field.optional...site.location.description) +geom_histogram(stat="count")+theme_bw()+coord_flip()
+```
+
+
+##### Trees with Dead Tops
+
+```{r}
+ggplot(data.site.filter,aes(top.dieback)) +facet_wrap(~field.optional...site.location.description) +geom_histogram(stat="count")+theme_bw()+coord_flip()
+```
+
+##### Thinning Trees
+
+```{r}
+ggplot(data.site.filter,aes(thinning)) +facet_wrap(~field.optional...site.location.description) +geom_histogram(stat="count")+theme_bw()+coord_flip()
+```
+
+
+
+#### Response 1.2 healthy / unhealthy
+
+```{r}
+data.site.filter$field.optional...site.location.description <- as.factor(data.site.filter$field.optional...site.location.description)
+
+data.site.filter$field.optional...site.location.description <- relevel(data.site.filter$field.optional...site.location.description, ref = "Inside a forest canopy")
+```
+
+
+```{r}
+binomial.af.site <- glmmTMB(binary.tree.canopy.symptoms ~ dist.from.mean.af.c + field.optional...site.location.description  + (1|Area),data=data.site.filter,family=binomial)
+```
+
+##### Overall Effect
+
+```{r}
+# Fit the reduced model (without site location description)
+reduced_model.binomial.site <- glmmTMB(binary.tree.canopy.symptoms ~ dist.from.mean.af.c + (1 | Area), 
+                       data = data.site.filter, 
+                       family = binomial)
+
+# Perform a likelihood ratio test
+anova(reduced_model.binomial.site, binomial.af.site, test = "Chisq")
+```
+
+The inclusion of the site variable improves the model fit, implying that the site location descriptions have a meaningful and statistically significant impact on the binary outcome binary.tree.canopy.symptoms.
+
+
+##### Model Summary
+
+
+```{r}
+summary(binomial.af.site)
+```
+
+#### Response 2.2 healthy / top-dieback 
+
+
+```{r}
+data.top.site <- data.site.filter %>% filter(reclassified.tree.canopy.symptoms=="Healthy"|reclassified.tree.canopy.symptoms=="Dead Top") %>% droplevels()
+```
+
+```{r}
+data.top.site$field.optional...site.location.description <- as.factor(data.top.site$field.optional...site.location.description)
+
+data.top.site$field.optional...site.location.description <- relevel(data.top.site$field.optional...site.location.description, ref = "Inside a forest canopy")
+```
+
+
+```{r}
+top.dieback.binomial.af.site <- glmmTMB(top.dieback ~ dist.from.mean.af.c + field.optional...site.location.description + (1|Area),data=data.top.site,family=binomial)
+```
+
+##### Overall Effect
+
+```{r}
+# Fit the reduced model (without site location description)
+reduced_model.top.site <- glmmTMB(top.dieback ~ dist.from.mean.af.c + (1 | Area), 
+                       data = data.top.site, 
+                       family = binomial)
+
+# Perform a likelihood ratio test
+anova(reduced_model.top.site, top.dieback.binomial.af.site, test = "Chisq")
+```
+
+The inclusion of the site variable in the model provides a better fit, but the improvement is only marginally significant. This suggests that while site location descriptions may have an effect on top.dieback, the evidence is not strong enough to definitively conclude a significant overall effect at the 0.05 level. Further investigation or additional data might help clarify the importance of this predictor.
+
+
+##### Model Summary
+
+```{r}
+summary(top.dieback.binomial.af.site)
+```
+
+#### Response 3.2 healthy / thinning
+
+```{r}
+data.thin.site <- data.site.filter %>% filter(reclassified.tree.canopy.symptoms=="Healthy"|reclassified.tree.canopy.symptoms=="Thinning Canopy") %>% droplevels()
+```
+
+```{r}
+data.thin.site$field.optional...site.location.description <- as.factor(data.thin.site$field.optional...site.location.description)
+
+data.thin.site$field.optional...site.location.description <- relevel(data.thin.site$field.optional...site.location.description, ref = "Inside a forest canopy")
+```
+
+```{r}
+thinning.binomial.af.site <- glmmTMB(thinning ~ dist.from.mean.af.c + field.optional...site.location.description + (1|Area),data=data.thin.site,family=binomial)
+```
+
+##### Overall Effect
+
+```{r}
+# Fit the reduced model (without site location description)
+reduced_model.thin.site <- glmmTMB(thinning ~ dist.from.mean.af.c + (1 | Area), 
+                       data = data.thin.site, 
+                       family = binomial)
+
+# Perform a likelihood ratio test
+anova(reduced_model.thin.site, thinning.binomial.af.site, test = "Chisq")
+```
+
+The p-value of 0.01245 indicates that the inclusion of the field.optional...site.location.description variable significantly improves the model’s ability to predict thinning compared to the reduced model that only includes dist.from.mean.af.c.
+
+adding the site variable to the model significantly enhances its ability to predict thinning in trees. The statistically significant improvement in model fit suggests that the site location descriptions contribute valuable information about the likelihood of thinning. Therefore, both the distance from mean temp and the specific site location should be considered important factors in understanding and predicting tree thinning.
+
+
+##### Model Summary
+
+```{r}
+summary(thinning.binomial.af.site)
+```
+
+The Roadside location is significantly associated with a higher likelihood of thinning compared to the trees inside a forest canopy. In contrast, Forest edge and Urban yard or open park grounds do not show significant effects on thinning compared to trees inside a forest canopy.
+
+The model suggests that the distance from mean temp is a key factor influencing tree thinning, with greater distances associated with higher thinning probabilities. Additionally, trees located near roadsides are more susceptible to thinning, indicating that site location plays a role, though not all site locations are equally influential. The variability across areas, as indicated by the random effect for Area, suggests that other unmeasured factors may also be at play in different regions.
+
+

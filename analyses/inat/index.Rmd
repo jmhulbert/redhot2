@@ -33,7 +33,7 @@ The purpose of this page is to provide summaries of the data from the WRDM obser
 iNaturalist data were downloaded from the [Western Redcedar Dieback Map](https://www.inaturalist.org/projects/western-redcedar-dieback-map) on 1.13.24.
 
 ```{r}
-data <- read.csv("./data/urban-data.modified.csv")
+data <- read.csv('https://raw.githubusercontent.com/jmhulbert/redhot2/refs/heads/main/data/urban-data-modified.csv')
 ```
 
 # Wrangle Data 
@@ -41,7 +41,7 @@ data <- read.csv("./data/urban-data.modified.csv")
 
 ## Remove Dead Trees
 
-`r nrow(data)` trees were shared by community scientists in the WRDM project in areas with UHI data between 2020-2023. 
+`r nrow(data)` trees were shared by community scientists in the WRDM project in areas with UHI data between 2020-2025. 
 
 `r nrow(data[data$field.tree.canopy.symptoms=="Tree is dead",])` dead trees were included. 
 
@@ -74,7 +74,6 @@ data <- data %>% filter(!str_detect(place_guess, "Hoyt") & !str_detect(place_gue
 ```
 
 `r nrow(data)` observations were included in analyses after removing dead trees and trees from hoyt.
-
 
 # Data Summaries
 
@@ -126,7 +125,7 @@ area.obs.health
 ```
 
 ```{r fig.height=5, fig.width=10}
-ggplot(area.obs.health,aes(reclassified.tree.canopy.symptoms,n.obs,fill=reclassified.tree.canopy.symptoms))+facet_wrap(~Area)+geom_col()+coord_flip()+guides(fill="none")+theme_bw()+labs(x="Tree Canopy Symptoms",y="Number of Observations")+geom_text(aes(label=n.obs),nudge_y=20)
+ggplot(area.obs.health,aes(reclassified.tree.canopy.symptoms,n.obs,fill=reclassified.tree.canopy.symptoms))+facet_wrap(~Area)+geom_col()+coord_flip()+guides(fill="none")+theme_bw()+labs(x="Tree Canopy Symptoms",y="Number of Observations")+geom_text(aes(label=n.obs),nudge_y=40)
 ```
 
 ## Other Factors
@@ -140,8 +139,6 @@ data %>% group_by(field.other.factors...are.there.signs.or.symptoms.of.insect..d
 ```
 
 
-
-
 ```{r}
 obs.signs <- data %>% group_by(field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.) %>% summarize(n.obs=n())
 obs.signs
@@ -149,7 +146,7 @@ obs.signs
 
 
 ```{r fig.height=5, fig.width=10}
-ggplot(obs.signs,aes(field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.,n.obs,fill=field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.))+geom_col()+coord_flip()+guides(fill="none")+theme_bw()+labs(x="Signs or Symptoms Observed",y="Number of Observations")+geom_text(aes(label=n.obs),nudge_y=15)
+ggplot(obs.signs,aes(field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.,n.obs,fill=field.other.factors...are.there.signs.or.symptoms.of.insect..diseases..or.other.damage.))+geom_col()+coord_flip()+guides(fill="none")+theme_bw()+labs(x="Signs or Symptoms Observed",y="Number of Observations")+geom_text(aes(label=n.obs),nudge_y=50)
 ```
 
 ### Factors
@@ -160,5 +157,9 @@ obs.factors
 ```
 
 ```{r fig.height=5, fig.width=10}
-ggplot(obs.factors,aes(field.optional...what..other.factors..were.observed.,n.obs,fill=field.optional...what..other.factors..were.observed.))+geom_col()+coord_flip()+guides(fill="none")+theme_bw()+labs(x="Other Factor",y="Number of Observations")+geom_text(aes(label=n.obs),nudge_y=15)
+ggplot(obs.factors,aes(field.optional...what..other.factors..were.observed.,n.obs,fill=field.optional...what..other.factors..were.observed.))+geom_col()+coord_flip()+guides(fill="none")+theme_bw()+labs(x="Other Factor",y="Number of Observations")+geom_text(aes(label=n.obs),nudge_y=50)
 ```
+
+
+
+
