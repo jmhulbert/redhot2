@@ -429,7 +429,7 @@ data <- data %>% filter(scientific_name=="Thuja plicata" | scientific_name=="Thu
 > **`r length(other.species$scientific_name)`** observations were identified as other species by the iNaturalist community or were not identified to species. 
 
 
-### check for outliers
+### Check for outliers
 
 Check bservations to see if any are more than +/- 5 degrees C from mean.
 
@@ -437,8 +437,7 @@ Check bservations to see if any are more than +/- 5 degrees C from mean.
 ggplot(data,aes(dist.from.mean.af.c,field.dieback.percent))+geom_point()+theme_bw()
 ```
 
-## Remove innacurate locations
-
+### Remove innacurate locations
 ```{r}
 ggplot(data,aes(y=latitude.y,x=longitude.y,size=positional_accuracy)) +geom_point() +theme_bw()
 ```
@@ -454,7 +453,7 @@ ggplot(data,aes(y=latitude.y,x=longitude.y,size=positional_accuracy)) +geom_poin
 ```
 
 
-### Export Modified Data
+## Export Modified Data
 
 ```{r}
 write.csv(data,file="./urban-data-modified.csv")
