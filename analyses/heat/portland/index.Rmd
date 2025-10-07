@@ -97,6 +97,7 @@ hoyt.data <- data %>% filter(str_detect(place_guess, "Hoyt") |str_detect(place_g
 ## Remove observations from Hoyt
 
 ```{r}
+data.w.hoyt <- data
 data <- data %>% filter(!str_detect(place_guess, "Hoyt") & !str_detect(place_guess, "hoyt"))
 ```
 
@@ -155,6 +156,17 @@ p5 / p6
 ## Parks Observations
 
 ```{r}
+places.summary <- data.w.hoyt %>% group_by(place_guess) %>%summarize(n=n(),n.healthy=sum(binary.tree.canopy.symptoms == "Healthy", na.rm = TRUE),n.unhealthy=sum(binary.tree.canopy.symptoms == "Unhealthy", na.rm = TRUE)) %>% mutate(prop.unhealthy =n.unhealthy/n.healthy) %>% mutate(prop.group = factor(if_else(prop.unhealthy > 0.2, "high", "low"),levels = c("low", "high")))
+places.summary <- places.summary %>% filter(n>=5) %>% droplevels()
+```
+
+
+
+```{r}
+ggplot(places.summary,aes(place_guess,prop.unhealthy,fill=prop.group))+geom_col() +coord_flip()   +scale_fill_manual(values=c("#7fcdbb","#fe9929"))+guides(fill=FALSE)+ labs(x="Place",y="Proportion of Unhealthy Trees",title="Places with more than 5 observations")+theme( plot.title = element_text(hjust = 0.5)) + theme_bw()
+```
+
+```{r}
 
 parks$park[parks$park=="Washington park"] <-"Washington Park"
 parks <- parks %>% filter(park!="NE Hoyt St") %>% filter(park!="TriMet Washington Park MAX Station")
@@ -184,19 +196,25 @@ ggplot(parks,aes(park,fill=binary.tree.canopy.symptoms))+geom_histogram(stat="co
 
 
 ```{r fig.height=7.5, fig.width=5}
-ggplot(parks,aes(binary.tree.canopy.symptoms,pl.af.f, fill=binary.tree.canopy.symptoms ))+geom_boxplot(alpha=0.5) +facet_wrap(~park,ncol=1) +theme_bw()+coord_flip() + scale_fill_manual(name="Tree Condition",values=c("#7fcdbb","#fe9929"))+guides(fill=FALSE) +labs(x="Tree Condition",y=NULL)
+p7 <- ggplot(parks,aes(binary.tree.canopy.symptoms,pl.af.f, fill=binary.tree.canopy.symptoms ))+geom_boxplot(alpha=0.5) +facet_wrap(~park,ncol=1) +theme_bw()+coord_flip() + scale_fill_manual(name="Tree Condition",values=c("#7fcdbb","#fe9929"))+guides(fill=FALSE) +labs(x="Tree Condition",y="Temperature (F)")
+p7
 ```
 
 
 ```{r}
-parks.summary <- parks %>% group_by(park) %>% summarize(n=n(),n.healthy=sum(binary.tree.canopy.symptoms == "Healthy", na.rm = TRUE),n.unhealthy=sum(binary.tree.canopy.symptoms == "Unhealthy", na.rm = TRUE)) %>% mutate(prop.unhealthy =n.unhealthy/n.healthy)
+parks.summary <- parks %>% group_by(park) %>% summarize(n=n(),n.healthy=sum(binary.tree.canopy.symptoms == "Healthy", na.rm = TRUE),n.unhealthy=sum(binary.tree.canopy.symptoms == "Unhealthy", na.rm = TRUE)) %>% mutate(prop.unhealthy =n.unhealthy/n.healthy) %>% mutate(prop.group = factor(if_else(prop.unhealthy > 0.2, "high", "low"),levels = c("low", "high"))) %>% mutate(park = factor(park, levels = c("Willamette Park","Washington Park","Mt. Tabor Park","Hoyt Arboretum","Gabriel Park","Forest Park Conservancy","Columbia Park and Annex")))
 parks.summary
 ```
 
 
 
-```{r}
-ggplot(parks.summary,aes(park,prop.unhealthy))+geom_col()+coord_flip()+theme_bw()+geom_text(aes(label=n),hjust = -0.5)
+```{r fig.height=7.5, fig.width=5}
+p8 <- ggplot(parks.summary,aes(park,prop.unhealthy,fill=prop.group))+geom_col()+coord_flip()+theme_bw()+geom_text(aes(label=n),hjust = -0.2) + scale_fill_manual(name="Proportion",values=c("#7fcdbb","#fe9929"))+guides(fill=FALSE) + labs(y="Proportion of Trees Categorized as Unhealthy (n=total)",x="Portland Park")
+p8
+```
+
+```{r fig.height=10, fig.width=10}
+p8 + p7 
 ```
 
 
