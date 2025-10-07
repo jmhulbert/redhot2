@@ -73,7 +73,7 @@ portbb <- c(left = min(portland$longitude.x),
 
 
 ```{r}
-ggmap::register_google(key="AIzaSyBKzHgJMW7vKKh9CVownh8fgDpZ4KLYpXE")
+#ggmap::register_google(key="removed")
 ```
 
 
