@@ -1,0 +1,378 @@
+---
+title: "Binomial Distribution Response to Urban Heat - Tacoma"
+output: 
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(corrplot)
+library(knitr)
+library(kableExtra)
+library(gghalves)
+library(patchwork)
+library(scales)
+library(glmmTMB)
+library(bbmle)
+library(DHARMa)
+```
+
+# Tacoma
+
+# Purpose
+
+The purpose of this page is to summarize an investigation of **tree health categories** as a *categorical* response to urban heat (temperatures) for observations from Tacoma, WA.
+
+Response variable: category: *healthy, unhealthy*
+
+*Response variables*
+Binary health: healthy, unhealthy
+Binary dead top: no top dieback, top dieback
+Binary thinning: no thinning, thinning
+
+# Data Wrangling
+
+```{r}
+data <- read.csv('https://raw.githubusercontent.com/jmhulbert/redhot2/refs/heads/main/data/urban-data-modified.csv')
+```
+
+## Remove dead trees
+
+```{r}
+# Remove Dead Trees
+data.w.dead <- data 
+data <- data %>% filter(field.tree.canopy.symptoms!="Tree is dead") %>% filter(field.dieback.percent<100) %>% droplevels()
+```
+
+`r nrow(data.w.dead)-nrow(data)` trees were dead
+
+```{r}
+data$binary.tree.canopy.symptoms <- as.factor(data$binary.tree.canopy.symptoms)
+levels(data$binary.tree.canopy.symptoms)
+```
+
+## Filter to Tacoma Data
+
+```{r}
+data <- data %>% filter(Area=="Tacoma") %>% droplevels()
+```
+
+`r nrow(data)` trees were included in Tacoma
+
+```{r}
+data$top.dieback <- as.factor(data$top.dieback)
+data$thinning <- as.factor(data$thinning)
+```
+
+
+## Remove Point Defiance Data (optional)
+
+```{r}
+pd.data <- data %>% filter(str_detect(place_guess, "Point Defiance") |str_detect(place_guess, "point defiance")) %>%  mutate(park = str_remove(place_guess, ",.*"))
+```
+
+`r nrow(pd.data)` trees were observed in Point Defiance (based on iNat place guess)
+
+
+```{r}
+data.no.pd <- data %>% filter(!str_detect(place_guess, "Point Defiance") & !str_detect(place_guess, "point defiance"))
+```
+
+`r nrow(data.no.pd)` trees were observed from throughout Tacoma, not including Point Defiance (based on iNat place guess)
+
+
+# Visualize Tacoma Data
+
+```{r}
+#ggplot(data,aes(binary.tree.canopy.symptoms,tac.af.f,fill=binary.tree.canopy.symptoms))+geom_violin()+coord_flip()+theme_bw()+ scale_fill_manual(name="Tree Condition",values=c("#7fcdbb","#fe9929"))+guides(fill=FALSE)
+```
+
+```{r}
+p1 <- ggplot(data,aes(binary.tree.canopy.symptoms,fill=binary.tree.canopy.symptoms))+geom_histogram(stat="count",alpha=0.5)+theme_bw()+coord_flip()+ scale_fill_manual(values=c("#7fcdbb","#fe9929"))+guides(fill=FALSE)
+```
+
+```{r}
+p2 <- ggplot(data,aes(reclassified.tree.canopy.symptoms,fill=reclassified.tree.canopy.symptoms))+geom_histogram(stat="count",alpha=0.5)+theme_bw()+coord_flip()+ scale_fill_manual(values=c("#fe9929","#7fcdbb","#fe9929","#fe9929"))+guides(fill=FALSE)
+```
+
+```{r}
+p1 + p2
+```
+
+```{r}
+#p3 <- ggplot(data,aes(binary.tree.canopy.symptoms)) +facet_wrap(~field.optional...tree.size) +geom_histogram(stat="count")+theme_bw()+coord_flip()
+#p3
+```
+
+```{r}
+#p4 <- ggplot(data,aes(binary.tree.canopy.symptoms)) +facet_wrap(~field.optional...site.location.description) +geom_histogram(stat="count")+theme_bw()+coord_flip()
+#p4
+```
+
+```{r}
+p5 <-ggplot(data,aes(binary.tree.canopy.symptoms,tac.af.f, fill=binary.tree.canopy.symptoms ))+geom_boxplot(alpha=0.5)+theme_bw()+coord_flip() + scale_fill_manual(name="Tree Condition",values=c("#7fcdbb","#fe9929"))+guides(fill=FALSE) +labs(x="Tree Condition",y=NULL)
+```
+
+```{r}
+p6 <-ggplot(data,aes(tac.af.f,fill=binary.tree.canopy.symptoms))+geom_density(alpha=0.5) + scale_fill_manual(name="Tree Condition",values=c("#7fcdbb","#fe9929")) +theme_bw() +labs(x="Afternoon Temperature") +guides(fill=FALSE)
+```
+
+```{r}
+p5 / p6
+```
+
+
+
+## Data without Point Defiance
+
+
+```{r}
+p7 <-ggplot(data.no.pd,aes(binary.tree.canopy.symptoms,tac.af.f, fill=binary.tree.canopy.symptoms))+geom_boxplot(alpha=0.5)+theme_bw()+coord_flip() + scale_fill_manual(name="Tree Condition",values=c("#7fcdbb","#fe9929"))+guides(fill=FALSE) +labs(x="Tree Condition",y=NULL)
+```
+
+```{r}
+p8 <-ggplot(data.no.pd,aes(tac.af.f,fill=binary.tree.canopy.symptoms))+geom_density(alpha=0.5) + scale_fill_manual(name="Tree Condition",values=c("#7fcdbb","#fe9929")) +theme_bw() +labs(x="Afternoon Temperature") +guides(fill=FALSE)
+```
+
+```{r}
+p7 / p8
+```
+
+
+## Point Defiance Data Only
+
+
+```{r}
+p9 <-ggplot(pd.data,aes(binary.tree.canopy.symptoms,tac.af.f, fill=binary.tree.canopy.symptoms))+geom_boxplot(alpha=0.5)+theme_bw()+coord_flip() + scale_fill_manual(name="Tree Condition",values=c("#7fcdbb","#fe9929"))+guides(fill=FALSE) +labs(x="Tree Condition",y=NULL)
+```
+
+```{r}
+p10 <-ggplot(pd.data,aes(tac.af.f,fill=binary.tree.canopy.symptoms))+geom_density(alpha=0.5) + scale_fill_manual(name="Tree Condition",values=c("#7fcdbb","#fe9929")) +theme_bw() +labs(x="Afternoon Temperature") +guides(fill=FALSE)
+```
+
+
+```{r}
+p9 / p10
+```
+
+
+
+# Analyses
+
+
+
+## Temperature Time Periods
+
+```{r}
+binomial.daily <- glmmTMB(binary.tree.canopy.symptoms ~ mean.temp.daily.f ,family=binomial,data=data)
+binomial.am <- glmmTMB(binary.tree.canopy.symptoms ~ tac.am.f ,data=data,family=binomial)
+binomial.af <- glmmTMB(binary.tree.canopy.symptoms ~ tac.af.f ,data=data,family=binomial)
+binomial.pm <- glmmTMB(binary.tree.canopy.symptoms ~ tac.pm.f,data=data,family=binomial)
+```
+
+### Best Fit Comparison
+
+```{r}
+AICtab(binomial.daily,binomial.am,binomial.af,binomial.pm)
+```
+
+> Overnight heat was the best fit
+
+
+## Response 1.0: healthy / unhealthy
+
+```{r}
+binomial.af <- glmmTMB(binary.tree.canopy.symptoms ~ tac.af.f, data=data,family=binomial)
+```
+
+### Summary
+
+```{r}
+summary(binomial.af)
+```
+
+Tree health is associated with urban heat. The probability of success (tree categorized as unhealthy) increases with urban heat
+
+Unhealthy trees are considered success (1) because it is the second level. The probability of failure (0) is the first level (Healthy).
+
+```{r}
+levels(data$binary.tree.canopy.symptoms)
+```
+
+The probability of a tree being classified as unhealthy increases with urban temperature. 
+
+
+### Visualize effects of predictors
+
+First, generate predictions from model
+
+```{r}
+# Create a data frame for predictions
+new.data <- expand.grid(
+  tac.af.f = seq(min(data$tac.af.f), max(data$tac.af.f), length.out = 100)  # keeping predictor2 constant at its mean
+)
+```
+
+```{r}
+new.data$predicted_response <- predict(binomial.af, newdata = new.data, type = "response")
+```
+
+```{r}
+head(new.data)
+```
+
+```{r}
+ggplot(new.data, aes(x = tac.af.f, y = predicted_response)) +
+  geom_line() +
+  labs(x = "Afternoon Temperature", y = "Predicted Response") +
+  theme_bw()
+```
+
+The probability of tree being classified as unhealthy increases with afternoon temperature
+
+
+
+
+### Compare without Point Defiance Data
+
+```{r}
+binomial.af <- glmmTMB(binary.tree.canopy.symptoms ~ tac.af.f, data=data.no.pd,family=binomial)
+```
+
+### Summary
+
+```{r}
+summary(binomial.af)
+```
+
+
+
+
+---
+
+## Response 2.0: healthy / top-dieback
+
+```{r}
+data.top <- data %>% filter(reclassified.tree.canopy.symptoms=="Healthy"|reclassified.tree.canopy.symptoms=="Dead Top") %>% droplevels()
+```
+
+
+
+```{r}
+top.dieback.binomial.af <- glmmTMB(top.dieback ~ tac.af.f,data=data.top,family=binomial)
+```
+
+### Summary
+
+```{r}
+summary(top.dieback.binomial.af)
+```
+
+
+```{r}
+levels(data$top.dieback)
+```
+
+The probability of a tree having top dieback increases with urban temperature. 
+
+### Visualize effects of predictors
+
+First, generate predictions from model
+
+```{r}
+# Create a data frame for predictions
+new.data.2 <- expand.grid(
+  tac.af.f = seq(min(80), max(150), length.out = 1000)  # keeping predictor2 constant at its mean
+)
+```
+
+
+```{r}
+head(new.data.2)
+```
+
+
+```{r}
+new.data.2$predicted_response <- predict(top.dieback.binomial.af, newdata = new.data.2, type = "response")
+```
+
+```{r}
+# Create a data frame for predictions
+new.data.2.inf <- expand.grid(
+  tac.af.f = seq(min(data.top$tac.af.f), max(150), length.out = 1000)  # keeping predictor2 constant at its mean
+)
+```
+
+```{r}
+new.data.2.inf$predicted_response <- predict(top.dieback.binomial.af, newdata = new.data.2.inf, type = "response")
+```
+
+
+```{r}
+p <- ggplot(new.data.2.inf, aes(x = tac.af.f, y = predicted_response)) + geom_line() + labs(x = "Afternoon temperature (F)", y = "Dieback Probability") + scale_x_continuous(limits = c(80, 115)) +theme_minimal()
+
+p
+```
+
+---
+
+## Response 3.0: healthy / thinning
+
+```{r}
+data.thin <- data %>% filter(reclassified.tree.canopy.symptoms=="Healthy"|reclassified.tree.canopy.symptoms=="Thinning Canopy") %>% droplevels()
+```
+
+```{r}
+thinning.binomial.af <- glmmTMB(thinning ~ tac.af.f,data=data.thin,family=binomial)
+```
+
+### Summary
+
+```{r}
+summary(thinning.binomial.af)
+```
+
+
+```{r}
+levels(data.thin$thinning)
+str(data.thin$thinning)
+```
+
+There was no evidence the probability of a tree being classified as thinning is related to afternoon heat.  
+
+
+
+### Visualize effects of predictors
+
+First, generate predictions from model
+
+```{r}
+# Create a data frame for predictions
+new.data.3 <- expand.grid(
+  tac.af.f = seq(min(data.thin$tac.af.f), max(data.thin$tac.af.f), length.out = 100),  # keeping predictor2 constant at its mean
+  Area = 0  # assuming random effect is zero for prediction
+)
+```
+
+```{r}
+new.data.3$predicted_response <- predict(thinning.binomial.af, newdata = new.data.3, type = "response")
+```
+
+```{r}
+ggplot(new.data.3, aes(x = tac.af.f, y = predicted_response)) +
+  geom_line() +
+  labs(x = "Distance from Mean Temperature", y = "Dieback Probability") +
+  theme_minimal()
+```
+
+
+
+
