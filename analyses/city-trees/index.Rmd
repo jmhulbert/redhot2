@@ -1,0 +1,55 @@
+---
+title: "2025 City Tree Analyses"
+output: html_document
+date: "2025-11-04"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(knitr)
+library(kableExtra)
+library(gghalves)
+library(patchwork)
+library(scales)
+library(ggmap)
+library(osmdata)
+```
+
+
+
+# City Tree Analyses
+
+
+## Data Wrangle
+
+### Download Seattle Data
+
+'Combined Seattle Trees' data were downloaded on November 4, 2025 from the Seattle GEO Data Portal at  https://data-seattlecitygis.opendata.arcgis.com/datasets/15ca3b333b984fef8fda342ab0bba4d0_0/explore?location=47.632456%2C-122.300026%2C11.90
+
+* Metadata
+  + October 3, 2025 at 9:45:22 AM PDT - Info Updated
+  + November 4, 2025 at 8:48:14 AM PST - Data Updated
+  + August 29, 2023 at 11:22:40 AM PDT - Published Date
+
+
+### Extract Heat Values
+
+Temperature data was added to Seattle combined trees in Qgis 3.40.5-Bratislava using raster analysis processing tools (out of the box)
+
+* Sample Raster Values
+  + Add heat data from each layer to the Seattle tree points
+  + Raster Analysis- Sample Raster Values
+  + Completed for all trees, for all temperatures (AM,AF,PM)
+  + Export .shp and .csv files with enhanced
+  
+### Import data 
+
+```{r}
+#seattle.combined <- read.csv('')
+```
+

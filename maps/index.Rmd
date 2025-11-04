@@ -68,7 +68,7 @@ portbb <- c(left = min(portland$longitude.x),
 
 
 ```{r}
-#ggmap::register_google(key="")
+#ggmap::register_google(key="",write=TRUE)
 ```
 
 
@@ -126,7 +126,8 @@ king.map.c
 ## Tacoma
 
 ```{r}
-tacomabb <- c(left = min(tacoma$longitude.x),bottom = min(tacoma$latitude.x),right = max(tacoma$longitude.x),top = max(tacoma$latitude.x))
+#tacomabb <- c(left = min(tacoma$longitude.x),bottom = min(tacoma$latitude.x),right = max(tacoma$longitude.x),top = max(tacoma$latitude.x))
+tacomabb <- c(left=-122.58,right=-122.38,top=47.33,bottom=47.18)
 ```
 
 ```{r}
