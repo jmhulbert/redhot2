@@ -314,7 +314,7 @@ King County redcedar at about 90.29 degrees had a 0.25 predicted response.
 p <- ggplot(new.data.2, aes(x = kc.af.f, y = predicted_response)) + geom_line() + labs(x = "Afternoon temperature (F)", y = "Dieback Probability") + scale_x_continuous(limits = c(80, 92.5),breaks=c(80,82.5,85,87.5,90,92.5)) + scale_y_continuous(limits = c(0, .3)) +theme_minimal()
 
 p2 <- p + annotate(geom="rect",ymin = -Inf, ymax = Inf, 
-              xmin = -Inf, xmax = 85., fill = alpha('#DDA0DD',0.5)) +
+              xmin = -Inf, xmax = 85.74, fill = alpha('#DDA0DD',0.5)) +
     annotate(geom="rect",ymin = -Inf, ymax = Inf, 
               xmin = 85.74, xmax = 90.29, fill = alpha('#7fcdbb',0.5)) + 
     annotate(geom="rect",ymin = -Inf, ymax = Inf, 

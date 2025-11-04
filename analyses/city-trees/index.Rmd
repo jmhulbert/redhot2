@@ -50,6 +50,85 @@ Temperature data was added to Seattle combined trees in Qgis 3.40.5-Bratislava u
 ### Import data 
 
 ```{r}
-#seattle.combined <- read.csv('')
+seattle.combined <- read.csv('https://github.com/jmhulbert/redhot2/raw/refs/heads/main/data/Seattle.Trees.Heat.csv')
 ```
 
+
+```{r}
+seattle.combined <- seattle.combined %>% filter(kc_af1>0)  %>% mutate(kc.am.f=kc_am1, kc.af.f=kc_af1,kc.pm.f=kc_pm1) %>% mutate(kc.am.c=(((kc.am.f-32)*5)/9),kc.af.c=(((kc.af.f-32)*5)/9),kc.pm.c=(((kc.pm.f-32)*5)/9)) %>% mutate(mean.temp.daily.f=((kc.am.f+kc.af.f+kc.pm.f)/3)) %>% mutate(dist.from.mean.daily.f=mean.temp.daily.f-(mean(mean.temp.daily.f,na.rm=TRUE))) %>% mutate(mean.temp.daily.c=((kc.am.c+kc.af.c+kc.pm.c)/3)) %>% mutate(dist.from.mean.daily.c=mean.temp.daily.c-(mean(mean.temp.daily.c,na.rm=TRUE))) %>% mutate(Area="King County")
+
+```
+
+
+```{r}
+seattle.combined <- seattle.combined %>% mutate(dist.from.mean.am.c = kc.am.c-(mean(kc.am.c,na.rm=TRUE)),dist.from.mean.am.f=kc.am.f-(mean(kc.am.f,na.rm=TRUE))) %>% mutate(dist.from.mean.af.c = kc.af.c-(mean(kc.af.c,na.rm=TRUE)),dist.from.mean.af.f=kc.af.f-(mean(kc.af.f,na.rm=TRUE))) %>% mutate(dist.from.mean.pm.c = kc.pm.c-(mean(kc.pm.c,na.rm=TRUE)),dist.from.mean.pm.f=kc.pm.f-(mean(kc.pm.f,na.rm=TRUE)))
+```
+
+
+```{r}
+seattle.streets <- seattle.combined %>% filter(SOURCE_DEP=="Seattle Department of Transportation") %>% mutate(city.space="Street")
+seattle.parks <- seattle.combined %>% filter(SOURCE_DEP=="Seattle Parks and Recreation") %>% mutate(city.space="Park")
+
+seattle.combined.back <- rbind(seattle.streets,seattle.parks)
+```
+
+
+```{r}
+seattle.wrc <- seattle.combined.back %>% filter(SCIENTIFIC=="Thuja plicata")
+```
+
+
+* King County Dieback Probability Categories (25%)
+  + Most Concern (>25%): > 90.29
+  + Moderate Concern (5-25%): 85.74 - 90.29
+  + Lowest Concern (<5%): < 85.74
+
+
+
+```{r}
+
+seattle.most <- seattle.wrc %>% filter(kc.af.f>90.29)%>% mutate(Category25="Most Concern") %>% droplevels()
+seattle.mod <- seattle.wrc %>% filter(kc.af.f>85.74 & kc.af.f<90.29) %>% mutate(Category25="Moderate Concern") %>% droplevels()
+seattle.low <- seattle.wrc %>% filter(kc.af.f<85.74) %>% mutate(Category25="Lowest Concern") %>% droplevels()
+
+seattle.wrc.cat <- bind_rows(list(seattle.low,seattle.mod,seattle.most))
+```
+
+
+```{r}
+ggplot(seattle.wrc.cat,aes(Category25,fill=Category25))+geom_bar(alpha=0.7) +theme_bw() + scale_fill_manual(name="Category",values=c("#7fcdbb","#fe9929","#DDA0DD")) +labs(x="Number of Trees",y="Concern Category") +guides(fill="none")
+
+```
+
+
+## Seattle Map
+
+```{r}
+seabb <- c(left = min(seattle.wrc.cat$lon), 
+                              bottom = min(seattle.wrc.cat$lat), 
+                              right = max(seattle.wrc.cat$lon), 
+                              top = max(seattle.wrc.cat$lat))
+```
+```{r}
+names(seattle.wrc.cat)
+```
+
+
+
+
+```{r}
+seamap <- get_map(seabb, zoom = 11, scale = 2, maptype="terrain",source="google")
+```
+
+```{r}
+seattle.map <- ggmap(seamap) + geom_point(data = seattle.combined.cat, aes(x = lon, y = lat,fill=DN_AF1), color = "black",pch=21, size = 3) + theme_minimal() +scale_fill_viridis_c(option = "inferno")+labs(title="Seattle",x="Longitude",y="Latitude",fill="Afternoon\nTemp (F)") +theme(plot.title = element_text(size = 14, hjust = .5,face = "bold.italic"))
+```
+
+```{r seattle-map, fig.height=7, fig.width=7}
+seattle.map
+```
+
+
+```{r}
+seattle.map <- ggmap(seamap) + geom_point(data = seattle.wrc.cat, aes(x = lon, y = lat,fill=Category25), color = "black",pch=21, size = 3) + theme_minimal() +scale_fill_manual(name="Category",values=c("#DDA0DD","#7fcdbb","#fe9929"))+labs(title="Seattle",x="Longitude",y="Latitude",fill="Conservation\nCategory") +theme(plot.title = element_text(size = 14, hjust = .5,face = "bold.italic"))
+```
