@@ -75,6 +75,8 @@ portbb <- c(left = min(portland$longitude.x),
 ```{r}
 portmap <- get_map(portbb, zoom = 11, scale = 2, maptype="terrain",source="google")
 ```
+
+
 ```{r}
 portland.map.f <- ggmap(portmap) + geom_point(data = portland, aes(x = longitude.x, y = latitude.x,fill=pl.af.f), color = "black",pch=21, size = 3) + theme_minimal() +scale_fill_viridis_c(option = "inferno")+labs(title="Portland",x="Longitude",y="Latitude",fill="Afternoon\nTemp (F)") +theme(plot.title = element_text(size = 14, hjust = .5,face = "bold.italic"))
 ```

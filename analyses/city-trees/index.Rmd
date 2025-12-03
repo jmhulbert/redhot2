@@ -50,7 +50,7 @@ Temperature data was added to Seattle combined trees in Qgis 3.40.5-Bratislava u
 ### Import data 
 
 ```{r}
-seattle.combined <- read.csv('https://github.com/jmhulbert/redhot2/raw/refs/heads/main/data/Seattle.Trees.Heat.csv')
+seattle.combined <- read.csv('https://github.com/jmhulbert/redhot2/raw/refs/heads/main/data/Seattle.WRC.Heat.csv')
 ```
 
 
@@ -69,12 +69,19 @@ seattle.combined <- seattle.combined %>% mutate(dist.from.mean.am.c = kc.am.c-(m
 seattle.streets <- seattle.combined %>% filter(SOURCE_DEP=="Seattle Department of Transportation") %>% mutate(city.space="Street")
 seattle.parks <- seattle.combined %>% filter(SOURCE_DEP=="Seattle Parks and Recreation") %>% mutate(city.space="Park")
 
-seattle.combined.back <- rbind(seattle.streets,seattle.parks)
+seattle.wrc <- rbind(seattle.streets,seattle.parks)
+```
+
+
+
+```{r}
+seattle.wrc$latitude <- seattle.wrc$lon
+seattle.wrc$longitude <- seattle.wrc$lat
 ```
 
 
 ```{r}
-seattle.wrc <- seattle.combined.back %>% filter(SCIENTIFIC=="Thuja plicata")
+#seattle.wrc <- seattle.combined.back %>% filter(SCIENTIFIC=="Thuja plicata")
 ```
 
 
@@ -96,7 +103,7 @@ seattle.wrc.cat <- bind_rows(list(seattle.low,seattle.mod,seattle.most))
 
 
 ```{r}
-ggplot(seattle.wrc.cat,aes(Category25,fill=Category25))+geom_bar(alpha=0.7) +theme_bw() + scale_fill_manual(name="Category",values=c("#7fcdbb","#fe9929","#DDA0DD")) +labs(x="Number of Trees",y="Concern Category") +guides(fill="none")
+ggplot(seattle.wrc.cat,aes(Category25,fill=Category25))+geom_bar(alpha=0.7) +theme_bw() + scale_fill_manual(name="Category",values=c("#DDA0DD","#7fcdbb","#fe9929")) +labs(x="Number of Trees",y="Concern Category") +guides(fill="none")
 
 ```
 
@@ -104,21 +111,35 @@ ggplot(seattle.wrc.cat,aes(Category25,fill=Category25))+geom_bar(alpha=0.7) +the
 ## Seattle Map
 
 ```{r}
-seabb <- c(left = min(seattle.wrc.cat$lon), 
-                              bottom = min(seattle.wrc.cat$lat), 
-                              right = max(seattle.wrc.cat$lon), 
-                              top = max(seattle.wrc.cat$lat))
+seabb <- c(left = min(seattle.wrc.cat$longitude), 
+                              bottom = min(seattle.wrc.cat$latitude), 
+                              right = max(seattle.wrc.cat$longitude), 
+                              top = max(seattle.wrc.cat$latitude))
 ```
-```{r}
-names(seattle.wrc.cat)
-```
-
-
 
 
 ```{r}
 seamap <- get_map(seabb, zoom = 11, scale = 2, maptype="terrain",source="google")
 ```
+
+
+
+## King County
+
+
+
+```{r}
+king.map.f <- ggmap(kingmap) + geom_point(data = king, aes(x = longitude.x, y = latitude.x,fill=kc.af.f), color = "black",pch=21, size = 3) + theme_minimal() +scale_fill_viridis_c(option = "inferno")+labs(title="King County",x="Longitude",y="Latitude",fill="Afternoon\nTemp (F)") +theme(plot.title = element_text(size = 14, hjust = .5,face = "bold.italic"))
+```
+
+```{r king-county-map-inat-f,fig.height=7, fig.width=7}
+king.map.f
+```
+
+
+
+
+
 
 ```{r}
 seattle.map <- ggmap(seamap) + geom_point(data = seattle.combined.cat, aes(x = lon, y = lat,fill=DN_AF1), color = "black",pch=21, size = 3) + theme_minimal() +scale_fill_viridis_c(option = "inferno")+labs(title="Seattle",x="Longitude",y="Latitude",fill="Afternoon\nTemp (F)") +theme(plot.title = element_text(size = 14, hjust = .5,face = "bold.italic"))

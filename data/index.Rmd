@@ -61,10 +61,6 @@ inat.full <- read.csv("./WRDM-Observations-9.3.25.csv")
 ```
 
 
-```{r}
-names(inat.full )
-```
-
 ## Prep for QGIS Data Extracts
 
 Filter data to only include necessary columns 

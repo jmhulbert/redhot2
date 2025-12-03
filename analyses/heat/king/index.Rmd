@@ -319,7 +319,7 @@ p2 <- p + annotate(geom="rect",ymin = -Inf, ymax = Inf,
               xmin = 85.74, xmax = 90.29, fill = alpha('#7fcdbb',0.5)) + 
     annotate(geom="rect",ymin = -Inf, ymax = Inf, 
           xmin = 90.29, xmax = Inf, fill = alpha('#fe9929',0.5))
-p3 <- p2 + annotate("text", x=82, y=.15, label= "Lowest\nConcern") + annotate("text", x=87.5, y=.15, label= "Moderate\nConcern") + annotate("text", x=91.9, y=.15, label= "Most\nConcern")
+p3 <- p2 + annotate("text", x=82.6, y=.15, label= "Lowest\nConcern") + annotate("text", x=87.5, y=.15, label= "Moderate\nConcern") + annotate("text", x=91.9, y=.15, label= "Most\nConcern")
 p3
 ```
   
