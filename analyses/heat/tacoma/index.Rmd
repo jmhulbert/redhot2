@@ -15,7 +15,7 @@ output:
 
 |            |            |            | Analyses   |            |            |            |
 |:----------:|:----------:|:----------:|:----------:|:----------:|:----------:|:----------:|
-|[Urban Heat](https://jmhulbert.github.io/redhot2/analyses/heat/)|[All Areas](https://jmhulbert.github.io/redhot2/analyses/heat/all-areas)|[Portland](https://jmhulbert.github.io/redhot2/analyses/heat/portland)|[Tacoma](https://jmhulbert.github.io/redhot2/analyses/heat/tacoma)|[King County](https://jmhulbert.github.io/redhot2/analyses/heat/king-county)|[iNaturalist](https://jmhulbert.github.io/redhot2/analyses/inaturalist/)|[City Inventories]((https://jmhulbert.github.io/redhot2/analyses/city-trees/))|
+|[Urban Heat](https://jmhulbert.github.io/redhot2/analyses/heat/)|[All Areas](https://jmhulbert.github.io/redhot2/analyses/heat/all-areas)|[Portland](https://jmhulbert.github.io/redhot2/analyses/heat/portland)|[Tacoma](https://jmhulbert.github.io/redhot2/analyses/heat/tacoma)|[King County](https://jmhulbert.github.io/redhot2/analyses/heat/king)|[iNaturalist](https://jmhulbert.github.io/redhot2/analyses/inaturalist/)|[City Inventories](https://jmhulbert.github.io/redhot2/analyses/city-trees/)|
 |             |           |            |            |            |            |            |
 
 

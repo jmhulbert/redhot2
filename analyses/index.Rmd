@@ -1,0 +1,32 @@
+---
+title: "Analyses Landing Page"
+output: html_document
+date: "2025-12-10"
+---
+
+
+
+|            |            |            |            |            |
+|:----------:|:----------:|:----------:|:----------:|:----------:|
+|[Welcome](https://jmhulbert.github.io/redhot2)|[Data](https://jmhulbert.github.io/redhot2/data)|[Analyses](https://jmhulbert.github.io/redhot2/analyses)|[Discussion](https://jmhulbert.github.io/redhot2/discussion)|[Maps](https://jmhulbert.github.io/redhot2/maps)
+|             |           |            |            |            |
+
+|            |            |            | Analyses   |            |            |            |
+|:----------:|:----------:|:----------:|:----------:|:----------:|:----------:|:----------:|
+|[Urban Heat](https://jmhulbert.github.io/redhot2/analyses/heat/)|[All Areas](https://jmhulbert.github.io/redhot2/analyses/heat/all-areas)|[Portland](https://jmhulbert.github.io/redhot2/analyses/heat/portland)|[Tacoma](https://jmhulbert.github.io/redhot2/analyses/heat/tacoma)|[King County](https://jmhulbert.github.io/redhot2/analyses/heat/king)|[iNaturalist](https://jmhulbert.github.io/redhot2/analyses/inaturalist/)|[City Inventories](https://jmhulbert.github.io/redhot2/analyses/city-trees/)|
+|             |           |            |            |            |            |            |
+
+
+# Redhot Analyses
+
+
+* Analyses
+  + [iNaturalist](https://jmhulbert.github.io/redhot2/analyses/inat/)
+  + [Urban Heat](https://jmhulbert.github.io/redhot2/analyses/heat/)
+    + [All Areas](https://jmhulbert.github.io/redhot2/analyses/heat/all-areas)
+    + [Portland](https://jmhulbert.github.io/redhot2/analyses/heat/portland)
+    + [Tacoma](https://jmhulbert.github.io/redhot2/analyses/heat/tacoma)
+    + [King County](https://jmhulbert.github.io/redhot2/analyses/heat/king)
+  + [City Inventories](https://jmhulbert.github.io/redhot2/analyses/city-trees/)
+    + [Seattle]
+    + [Portland]
