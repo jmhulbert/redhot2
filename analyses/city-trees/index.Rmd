@@ -107,6 +107,15 @@ ggplot(seattle.wrc.cat,aes(Category25,fill=Category25))+geom_bar(alpha=0.7) +the
 
 ```
 
+```{r}
+sum.table <- seattle.wrc.cat %>% group_by(Category25) %>% summarize (n=n())
+sum.table
+```
+
+
+
+
+
 
 ## Seattle Map
 
@@ -124,25 +133,8 @@ seamap <- get_map(seabb, zoom = 11, scale = 2, maptype="terrain",source="google"
 
 
 
-## King County
-
-
-
 ```{r}
-king.map.f <- ggmap(kingmap) + geom_point(data = king, aes(x = longitude.x, y = latitude.x,fill=kc.af.f), color = "black",pch=21, size = 3) + theme_minimal() +scale_fill_viridis_c(option = "inferno")+labs(title="King County",x="Longitude",y="Latitude",fill="Afternoon\nTemp (F)") +theme(plot.title = element_text(size = 14, hjust = .5,face = "bold.italic"))
-```
-
-```{r king-county-map-inat-f,fig.height=7, fig.width=7}
-king.map.f
-```
-
-
-
-
-
-
-```{r}
-seattle.map <- ggmap(seamap) + geom_point(data = seattle.combined.cat, aes(x = lon, y = lat,fill=DN_AF1), color = "black",pch=21, size = 3) + theme_minimal() +scale_fill_viridis_c(option = "inferno")+labs(title="Seattle",x="Longitude",y="Latitude",fill="Afternoon\nTemp (F)") +theme(plot.title = element_text(size = 14, hjust = .5,face = "bold.italic"))
+seattle.map <- ggmap(seamap) + geom_point(data = seattle.wrc.cat, aes(x = lat, y = lon,fill=kc.af.c), color = "black",pch=21, size = 3) + theme_minimal() +scale_fill_viridis_c(option = "inferno")+labs(title="Seattle",x="Longitude",y="Latitude",fill="Afternoon\nTemp (F)") +theme(plot.title = element_text(size = 14, hjust = .5,face = "bold.italic"))
 ```
 
 ```{r seattle-map, fig.height=7, fig.width=7}
@@ -151,5 +143,11 @@ seattle.map
 
 
 ```{r}
-seattle.map <- ggmap(seamap) + geom_point(data = seattle.wrc.cat, aes(x = lon, y = lat,fill=Category25), color = "black",pch=21, size = 3) + theme_minimal() +scale_fill_manual(name="Category",values=c("#DDA0DD","#7fcdbb","#fe9929"))+labs(title="Seattle",x="Longitude",y="Latitude",fill="Conservation\nCategory") +theme(plot.title = element_text(size = 14, hjust = .5,face = "bold.italic"))
+seattle.map <- ggmap(seamap) + geom_point(data = seattle.wrc.cat, aes(x = lat, y = lon,fill=Category25), color = "black",pch=21, size = 3) + theme_minimal() +scale_fill_manual(name="Category",values=c("#DDA0DD","#7fcdbb","#fe9929"))+labs(title="Seattle",x="Longitude",y="Latitude",fill="Conservation\nCategory") +theme(plot.title = element_text(size = 14, hjust = .5,face = "bold.italic"))
 ```
+
+
+```{r}
+seattle.map
+```
+
