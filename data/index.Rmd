@@ -1,6 +1,6 @@
 ---
 title: "Redhot 2.0 Data Wrangle"
-date: "2025-09-03"
+date: "2026-05-20"
 output: 
   html_document:
     toc: true
@@ -26,18 +26,20 @@ The purpose of this page is to share the steps taken to wrangle the data for the
 
 # Data
 
-Observations of western redcedar were downloaded from iNaturalist and urban heat data were downloaded from open data portals or provided by contacts in the City of Tacoma, King County (Washington) and Portland. Trees in WA were also evaluated based on EHD Ranks.
+Observations of western redcedar were downloaded from iNaturalist and urban heat data were downloaded from open data portals or provided by contacts in the City of Tacoma, King County (Washington) and Portland. 
 
 ## iNaturalist
 
-iNaturalist data were downloaded on 9.3.2025 with the below query. 
+iNaturalist data were downloaded on **5.13.2026** with the below query. 
     + full data (query: quality_grade=any&identifications=any%projects%5B%5D=western-redcedar-dieback-map)
-      + Note we needed to specify all fields related to place and all fields related to the project
-      
+      + Note 
+        + we needed to specify all fields related to place and all fields related to the project
+        + we also only included observations fields in core project (not extra fields from other projects present from observations in two projects)
+    
       
 ```{r eval=FALSE}
 Query quality_grade=any&identifications=any&projects[]=western-redcedar-dieback-map
-Columns id, uuid, observed_on_string, observed_on, time_observed_at, time_zone, user_id, user_login, user_name, created_at, updated_at, quality_grade, license, url, image_url, sound_url, tag_list, description, num_identification_agreements, num_identification_disagreements, captive_cultivated, oauth_application_id, place_guess, latitude, longitude, positional_accuracy, private_place_guess, private_latitude, private_longitude, public_positional_accuracy, geoprivacy, taxon_geoprivacy, coordinates_obscured, positioning_method, positioning_device, place_town_name, place_county_name, place_state_name, place_country_name, place_admin1_name, place_admin2_name, species_guess, scientific_name, common_name, iconic_taxon_name, taxon_id, field:tree+health+condition, field:tree+canopy+symptoms, field:dieback+percent, field:percent+canopy+affected+%28%25%29, field:number+of+additional+unhealthy+trees+%28of+same+species%29+in+area+%28within+sight%29, field:other+factors+-+are+there+signs+or+symptoms+of+insect%2C+diseases%2C+or+other+damage%3F, field:optional+-+what+%27other+factors%27+were+observed%3F, field:optional+-+tree+size, field:optional+-+access+to+water, field:optional+-+estimated+time+spent+to+make+this+observation+%28%23+of+minutes%29, field:tree+number+%28from+google+map%29+if+applicable, field:tree+number+%28from+arboreta+or+other+dataset%29+if+applicable, field:optional+-+signs+of+sap+sucker+feeding%3F, field:notes, field:are+baby+redcedar+trees+present+within+sight%3F, field:brief+tree+health+description, field:did+the+tree+have+any+bark+discoloration+%28eg.+browning%29, field:evidence+of+wood+borers+or+bark+beetles%3F, field:leaf+production+or+drop+timing, field:location+name+-+community+spaces, field:location+type+-+community+spaces, field:most+prevalent+understory+species, field:optional+-+can+we+follow+up+with+you%3F, field:optional+-+did+the+tree+have+heat+damage, field:optional+-+site+hydrology, field:optional+-+site+type, field:optional+-+site%2Farea+disturbance+level, field:optional+-+site%2Flocation+description, field:optional+-+slope+position, field:optional+-+timing+of+symptoms+estimate, field:optional+-+were+there+any+other+unhealthy+plant+species+on+the+site%3F, field:percent+of+trees+%28of+same+species%29+within+sight+that+are+unhealthy, field:plant+health+condition, field:plant+health+symptom+-+rhododendron, field:powdery+mildew+-+percent+coverage, field:powdery+mildew%3F, field:relative+cone+crop, field:sample+submitted+to+laboratory%3F, field:signs+of+sooty+bark+disease%3F, field:suspected+phytophthora+infection%3F, field:tree+canopy+symptoms+-+birch, field:tree+canopy+symptoms+-+maple, field:tree+canopy+symptoms+-+wrc+-+simplified, field:tree+condition, field:tree+diameter, field:tree+diameter+%28inches%29, field:tree+equity+score, field:tree+health+issue, field:tree+height+total+%28ft%29, field:tree+number, field:urban+tree+health+condition  
+Columns id, uuid, observed_on_string, observed_on, time_observed_at, time_zone, user_id, user_login, user_name, created_at, updated_at, quality_grade, license, url, image_url, sound_url, tag_list, description, num_identification_agreements, num_identification_disagreements, captive_cultivated, oauth_application_id, place_guess, latitude, longitude, positional_accuracy, private_place_guess, private_latitude, private_longitude, public_positional_accuracy, geoprivacy, taxon_geoprivacy, coordinates_obscured, positioning_method, positioning_device, place_town_name, place_county_name, place_state_name, place_country_name, place_admin1_name, place_admin2_name, species_guess, scientific_name, common_name, iconic_taxon_name, taxon_id, field:tree+health+condition, field:tree+canopy+symptoms, field:dieback+percent, field:percent+canopy+affected+%28%25%29, field:number+of+additional+unhealthy+trees+%28of+same+species%29+in+area+%28within+sight%29, field:other+factors+-+are+there+signs+or+symptoms+of+insect%2C+diseases%2C+or+other+damage%3F, field:optional+-+what+%27other+factors%27+were+observed%3F, field:optional+-+tree+size, field:optional+-+access+to+water, field:optional+-+estimated+time+spent+to+make+this+observation+%28%23+of+minutes%29, field:tree+number+%28from+google+map%29+if+applicable, field:tree+number+%28from+arboreta+or+other+dataset%29+if+applicable, field:optional+-+signs+of+sap+sucker+feeding%3F, field:notes 
 ```
 
 ## Urban Heat Data
@@ -57,9 +59,8 @@ Readme File Notation included with Pierce County
 
 
 ```{r}
-inat.full <- read.csv("./WRDM-Observations-9.3.25.csv")
+inat.full <- read.csv("./WRDM-Observations-5.13.26.csv")
 ```
-
 
 ## Prep for QGIS Data Extracts
 
@@ -76,7 +77,7 @@ inat.full.qgis <- inat.full[c(1,24,25,36,37)]
 ```
 
 ```{r}
-#write.csv(inat.full.qgis,file="./WRDM-full-9.3.25-qgis.csv")
+#write.csv(inat.full.qgis,file="./WRDM-full-5.13.26-qgis.csv")
 ```
 
 
@@ -95,35 +96,251 @@ print(names)
 
 ```{r eval=FALSE, include=FALSE}
 #python output
-['825a_2', '825b_2', '825c_2', 'WRDM-full-9.3.25-qgis', 'af_t_f_ranger', 'am_t_f_ranger', 'pierce-county-washington_af_temp_f', 'pierce-county-washington_am_temp_f', 'pierce-county-washington_pm_temp_f', 'pm_t_f_ranger', 'tac_af', 'tac_am', 'tac_pm']
+['825a_2', '825b_2', '825c_2', 'WRDM-full-5.13.26-qgis', 'af_t_f_ranger', 'am_t_f_ranger', 'clip_tac_af', 'clip_tac_am', 'clip_tac_pm', 'pierce-county-washington_af_temp_f', 'pierce-county-washington_am_temp_f', 'pierce-county-washington_pm_temp_f', 'pm_t_f_ranger']
 ```
   
 ```{r eval=FALSE, include=FALSE}
 #layers renamed to 
-['po_am', 'po_af', 'po_pm', 'WRDM-full-9.3.25-qgis', 'kc_af', 'kc_am', 'pc_af', 'pc_am', 'pc_pm', 'kc_pm', 'tac_af', 'tac_am', 'tac_pm']
+['po_am', 'po_af', 'po_pm', 'WRDM-full-5.13.26-qgis', 'kc_af', 'kc_am', 'tac_af', 'tac_am', 'tac_pm', 'pc_af', 'pc_am', 'pc_pm', 'kc_pm']
 ```
 
-* Sample Raster Values
-  + Add heat data from each layer to the iNat points
-  + Raster Analysis- Sample Raster Values
+* Sample Raster Values - Add heat data from each layer to the iNat points
+  + Raster Analysis- Sample Raster Values (add geoprocessing toolbox panel)
   
-
 ```{r eval=FALSE, include=FALSE}
-# qgis input - note i renamed the temporary output layer each time by hand.. (e.g. Sampled 1-12)
-processing.run("native:rastersampling", {'INPUT':'delimitedtext://file:///Users/profbabykangaroo/Library/Mobile%20Documents/com~apple~CloudDocs/Core/Server%20Files/redhot2/data/WRDM-full-9.3.25-qgis.csv?type=csv&maxFields=10000&detectTypes=yes&xField=longitude&yField=latitude&crs=EPSG:4326&spatialIndex=no&subsetIndex=no&watchFile=no','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/King County/All Data_CHW_Seattle KingCounty_093020/rasters_chw_seattle king county_120120/af_t_f_ranger.tif','COLUMN_PREFIX':'kc_af','OUTPUT':'TEMPORARY_OUTPUT'})
-processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&uid={aa48cd1e-8f83-4554-afbb-d4a2f5ec33de}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/King County/All Data_CHW_Seattle KingCounty_093020/rasters_chw_seattle king county_120120/am_t_f_ranger.tif','COLUMN_PREFIX':'kc_am','OUTPUT':'TEMPORARY_OUTPUT'})
-processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&uid={8d135e93-2830-49e2-a9c9-8b2b1c8840f5}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/King County/All Data_CHW_Seattle KingCounty_093020/rasters_chw_seattle king county_120120/pm_t_f_ranger.tif','COLUMN_PREFIX':'kc_pm','OUTPUT':'TEMPORARY_OUTPUT'})
-processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&uid={25a7078d-6319-432a-9aaf-50214e5c6327}','RASTERCOPY':'/Users/profbabykangaroo/Downloads/osfstorage-archive/rasters_chw_pierce_county_washington_082724/pierce-county-washington_af_temp_f.tif','COLUMN_PREFIX':'pc_af','OUTPUT':'TEMPORARY_OUTPUT'})
-processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&uid={5bfc188e-ecf3-4e43-8ac1-7842bac356e4}','RASTERCOPY':'/Users/profbabykangaroo/Downloads/osfstorage-archive/rasters_chw_pierce_county_washington_082724/pierce-county-washington_am_temp_f.tif','COLUMN_PREFIX':'pc_am','OUTPUT':'TEMPORARY_OUTPUT'})
-processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&uid={7481c73a-fd0b-4e88-954d-5c9125dc392e}','RASTERCOPY':'/Users/profbabykangaroo/Downloads/osfstorage-archive/rasters_chw_pierce_county_washington_082724/pierce-county-washington_pm_temp_f.tif','COLUMN_PREFIX':'pc_pm','OUTPUT':'TEMPORARY_OUTPUT'})
-processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&uid={e3215058-bb7d-4822-b396-989b495d2910}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Portland/825b_2.tif','COLUMN_PREFIX':'po_af','OUTPUT':'TEMPORARY_OUTPUT'})
-processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&uid={8d84bb2f-9c13-49ab-b025-4e2ecf5241fa}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Portland/825a_2.tif','COLUMN_PREFIX':'po_am','OUTPUT':'TEMPORARY_OUTPUT'})
-processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&uid={68f998f7-9574-428e-a430-cce2dc07c90e}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Portland/825c_2.tif','COLUMN_PREFIX':'po_pm','OUTPUT':'TEMPORARY_OUTPUT'})
-processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&field=po_pm1:double(0,0)&uid={6b80f4f0-3e1d-4221-bfa6-ad70a94f407d}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Tacoma/tac/tac_af.tif','COLUMN_PREFIX':'tac_af','OUTPUT':'TEMPORARY_OUTPUT'})
-processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&field=po_pm1:double(0,0)&field=tac_af1:double(0,0)&uid={462de0ca-06e3-4cb9-8512-8ba4771b31b6}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Tacoma/tac/tac_am.tif','COLUMN_PREFIX':'tac_am','OUTPUT':'TEMPORARY_OUTPUT'})
-processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&field=po_pm1:double(0,0)&field=tac_af1:double(0,0)&field=tac_am1:double(0,0)&uid={37e9311f-d7ce-46a3-b853-341fecac7df4}','RASTERCOPY':'/Users/profbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Tacoma/tac/tac_pm.tif','COLUMN_PREFIX':'tac_pm','OUTPUT':'TEMPORARY_OUTPUT'})
+## Note that I renamed each layer in between runs (first run generated temporary layer 'sampled', second run generated temporary layer 'sampled' - renamed to 'sampled-1' through sampled-12)
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:14:29
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'kc_af', 'INPUT' : 'delimitedtext://file:///Users/professorbabykangaroo/Library/Mobile%20Documents/com~apple~CloudDocs/Core/Server%20Files/redhot2/data/WRDM-full-5.13.26-qgis.csv?type=csv&maxFields=10000&detectTypes=yes&xField=longitude&yField=latitude&crs=EPSG:32610&spatialIndex=no&subsetIndex=no&watchFile=no', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/King County/All Data_CHW_Seattle KingCounty_093020/rasters_chw_seattle king county_120120/af_t_f_ranger.tif' }
+
+Execution completed in 0.13 seconds
+Results:
+  OUTPUT: Sampled_99eae76e_651a_4d36_9393_f54cec2de14f
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:15:04
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'kc_am', 'INPUT' : 'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&uid={7daa2b9d-6c1b-4b2e-8426-48f813287e0b}', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/King County/All Data_CHW_Seattle KingCounty_093020/rasters_chw_seattle king county_120120/am_t_f_ranger.tif' }
+
+Execution completed in 0.12 seconds
+Results:
+  OUTPUT: Sampled_903683ac_7cc5_4fe9_b6b8_71d53825430f
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:15:34
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'kc_pm', 'INPUT' : 'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&uid={156e26dd-f361-488a-944a-cc9be7188dd8}', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/King County/All Data_CHW_Seattle KingCounty_093020/rasters_chw_seattle king county_120120/pm_t_f_ranger.tif' }
+
+Execution completed in 0.12 seconds
+Results:
+  OUTPUT: Sampled_075f57c5_49cf_44c0_b8b3_421f90a1350b
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:16:29
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'pc_af', 'INPUT' : 'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&uid={7d194a68-6cbd-4579-9586-09100dd51f0f}', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Pierce County/pierce-county-washington_af_temp_f.tif' }
+
+Execution completed in 0.05 seconds
+Results:
+  OUTPUT: Sampled_949c45ab_4077_48c9_bb16_f207f3f96794
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:16:53
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'pc_am', 'INPUT' : 'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&uid={74cf18f7-fe0b-4938-b722-70779ac43334}', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Pierce County/pierce-county-washington_am_temp_f.tif' }
+
+Execution completed in 0.05 seconds
+Results:
+  OUTPUT: Sampled_df0abb15_a4ac_4f22_afda_40e939d19b21
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:17:20
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'pc_pm', 'INPUT' : 'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&uid={e841e5c2-8486-4537-a77e-efd683a5e5ad}', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Pierce County/pierce-county-washington_pm_temp_f.tif' }
+
+Execution completed in 0.05 seconds
+Results:
+  OUTPUT: Sampled_0770584e_b859_494c_b52c_16502c4f5ed5
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:17:59
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'po_af', 'INPUT' : 'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&uid={bc38586d-25f8-4500-b32a-a334ccdc3f29}', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Portland/825b_2.tif' }
+
+Execution completed in 0.14 seconds
+Results:
+  OUTPUT: Sampled_bb2c5487_7f9f_4f26_8f09_019962b58c96
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:18:19
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'po_am', 'INPUT' : 'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&uid={ef418b3c-340c-4fc0-99d7-b74731644518}', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Portland/825a_2.tif' }
+
+Execution completed in 0.13 seconds
+Results:
+  OUTPUT: Sampled_d89e2f26_77c2_468d_b1e5_cd76cd4847e4
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:18:47
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'po_pm', 'INPUT' : 'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&uid={f6a055d1-6e22-4c11-b708-949a79d2661c}', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Portland/825c_2.tif' }
+
+Execution completed in 0.13 seconds
+Results:
+  OUTPUT: Sampled_68408d81_336e_414d_9e3f_351e7d6048e9
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:19:09
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'tac_af', 'INPUT' : 'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&field=po_pm1:double(0,0)&uid={4c759164-6d13-4881-9995-2011e06ff6a2}', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Tacoma/tac/clip_tac_af.tif' }
+
+Execution completed in 0.05 seconds
+Results:
+  OUTPUT: Sampled_78e3fc06_f49a_495c_97d6_ff219505258f
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:19:29
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'tac_am', 'INPUT' : 'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&field=po_pm1:double(0,0)&field=tac_af1:double(0,0)&uid={de2b674d-d920-46bf-82c2-602b4eadbad9}', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Tacoma/tac/clip_tac_am.tif' }
+
+Execution completed in 0.05 seconds
+Results:
+  OUTPUT: Sampled_4cebe462_6972_4a14_b9a2_8f799f6441c4
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+QGIS version: 3.44.8-Solothurn
+QGIS code revision: 9344f5ed
+Qt version: 5.15.18
+Python version: 3.12.11
+GDAL version: 3.12.0
+GEOS version: 3.14.1-CAPI-1.20.5
+PROJ version: Rel. 9.7.1, December 1st, 2025
+PDAL version: 2.9.3 (git-version: Release)
+Algorithm started at: 2026-05-27T07:19:57
+Algorithm 'Sample raster values' starting…
+Input parameters:
+{ 'COLUMN_PREFIX' : 'tac_pm', 'INPUT' : 'memory://Point?crs=EPSG:4326&field=field_1:integer(0,0)&field=id:integer(0,0)&field=latitude:double(0,0)&field=longitude:double(0,0)&field=place_town_name:string(0,0)&field=place_county_name:string(0,0)&field=kc_af1:double(0,0)&field=kc_am1:double(0,0)&field=kc_pm1:double(0,0)&field=pc_af1:double(0,0)&field=pc_am1:double(0,0)&field=pc_pm1:double(0,0)&field=po_af1:double(0,0)&field=po_am1:double(0,0)&field=po_pm1:double(0,0)&field=tac_af1:double(0,0)&field=tac_am1:double(0,0)&uid={298c93b9-246b-4941-93d1-d0c7ab38c3a2}', 'OUTPUT' : 'TEMPORARY_OUTPUT', 'RASTERCOPY' : '/Users/professorbabykangaroo/Library/Mobile Documents/com~apple~CloudDocs/Core/GIS/Urban Heat GIS data/Tacoma/tac/clip_tac_pm.tif' }
+
+Execution completed in 0.05 seconds
+Results:
+  OUTPUT: Sampled_2d98258d_74ef_43f1_b00c_cffbe8f8f58a
+
+Loading resulting layers
+Algorithm 'Sample raster values' finished
+
 # in the end i had one layer with temperature values for all times/cities/counties for points within those areas
 ```
+  
 
 
 # Post-GIS Data Wrangle
@@ -131,7 +348,7 @@ processing.run("native:rastersampling", {'INPUT':'memory://Point?crs=EPSG:4326&f
 ## Re-import data after QGIS methods
 
 ```{r}
-inat.full.heat <- read.csv("./WRDM-full-9.3.25-qgis-w-heat.csv")
+inat.full.heat <- read.csv("./WRDM-full-5.13.26-qgis-w-heat.csv")
 ```
 
 ## Join heat data with iNat data
@@ -144,16 +361,16 @@ redhot <- left_join(inat.full.heat,inat.full,by="id")
   
 ```{r}
 tac.wrc <- redhot %>% filter(tac_af1>0) %>% mutate(tac.am.c=tac_am1, tac.af.c=tac_af1,tac.pm.c=tac_pm1)
-pc.wrc <- redhot %>% filter(pc_af1>0) %>% mutate(pc.am.f=pc_am1, pc.af.f=pc_af1,pc.pm.f=pc_pm1)
-kc.wrc <- redhot %>% filter(kc_af1>0)  %>% mutate(kc.am.f=kc_am1, kc.af.f=kc_af1,kc.pm.f=kc_pm1)
+pc.wrc <- redhot %>% filter(pc_af1>0  & is.na(tac_af1) & is.na(kc_af1)) %>% mutate(pc.am.f=pc_am1, pc.af.f=pc_af1,pc.pm.f=pc_pm1)
+kc.wrc <- redhot %>% filter(kc_af1>0 & is.na(tac_af1) & is.na(pc_af1))  %>% mutate(kc.am.f=kc_am1, kc.af.f=kc_af1,kc.pm.f=kc_pm1)
 pl.wrc <- redhot %>% filter(po_af1>0) %>% mutate(pl.am.c=po_am1, pl.af.c=po_af1,pl.pm.c=po_pm1)
 ```
 
 * Number of observations
-  + Tacoma - 1530
-  + Pierce County - 26
-  + King County - 599
-  + Portland - 568
+  + Tacoma - 1739
+  + Pierce County - 29 (21 after exluding trees overlapping with tacoma and king county)
+  + King County - 601 (589 after excluding trees overlapping with pierce county and tacoma)
+  + Portland - 677
   
 > Note Tacoma trees overlapping data from king county or pierce county were included in Tacoma dataset instead of king county or pierce county datasets.  King county and pierce county datasets do not include Trees with tacoma data. King county data does not included trees with pierce county data.  
   
@@ -220,9 +437,9 @@ Some of the iNat project questions changed since it was created so some we need 
 data$field.number.of.additional.unhealthy.trees..of.same.species..in.area..within.sight. <- as.factor(data$field.number.of.additional.unhealthy.trees..of.same.species..in.area..within.sight.)
 data$field.optional...what..other.factors..were.observed. <- as.factor(data$field.optional...what..other.factors..were.observed.)
 data$field.tree.canopy.symptoms <- as.factor(data$field.tree.canopy.symptoms)
-data$field.optional...slope.position <- as.factor(data$field.optional...slope.position)
-data$field.optional...site.type <- as.factor(data$field.optional...site.type)
-data$field.optional...site.location.description  <- as.factor(data$field.optional...site.location.description )
+#data$field.optional...slope.position <- as.factor(data$field.optional...slope.position) #Some reason field was not available in export list of field in iNat?
+#data$field.optional...site.type <- as.factor(data$field.optional...site.type)  #Some reason field was not available in export list of field in iNat?
+#data$field.optional...site.location.description  <- as.factor(data$field.optional...site.location.description ) #Some reason field was not available in export list of field in iNat?
 data$field.optional...tree.size <-as.factor(data$field.optional...tree.size)
 ```
 
@@ -256,16 +473,21 @@ data$field.optional...what..other.factors..were.observed.[data$field.optional...
 
 
 ```{r}
-data$field.optional...slope.position[data$field.optional...slope.position=="Upper 1/3rd of a slope"] <-"Top of slope"
+#data$field.optional...slope.position[data$field.optional...slope.position=="Upper 1/3rd of a slope"] <-"Top of slope" #Some reason field was not available in export list of field in iNat?
 ```
 
 
 ```{r}
-data$field.optional...site.type[data$field.optional...site.type=="Urban Natural"] <-"Urban"
-data$field.optional...site.type[data$field.optional...site.type=="Urban Landscaped"] <-"Urban"
-data$field.optional...site.type[data$field.optional...site.type=="Suburban Natural"] <-"Suburban"
-data$field.optional...site.type[data$field.optional...site.type=="Suburban Lanscaped"] <-"Suburban"
-data$field.optional...site.type[data$field.optional...site.type=="Natural Forest"] <-"Rural"
+#Some reason field was not available in export list of field in iNat?
+#data$field.optional...site.type[data$field.optional...site.type=="Urban Natural"] <-"Urban"
+#data$field.optional...site.type[data$field.optional...site.type=="Urban Landscaped"] <-"Urban"
+#data$field.optional...site.type[data$field.optional...site.type=="Suburban Natural"] <-"Suburban"
+#data$field.optional...site.type[data$field.optional...site.type=="Suburban Lanscaped"] <-"Suburban"
+#data$field.optional...site.type[data$field.optional...site.type=="Natural Forest"] <-"Rural"
+```
+
+```{r}
+levels(data$field.optional...tree.size)
 ```
 
 
@@ -274,12 +496,13 @@ data$field.optional...tree.size[data$field.optional...tree.size=="Large"] <- "La
 data$field.optional...tree.size[data$field.optional...tree.size=="Medium"] <- "Medium (can wrap arms around trunk)"
 data$field.optional...tree.size[data$field.optional...tree.size=="Small"] <- "Small (can wrap hands around trunk)"
 data$field.optional...tree.size[data$field.optional...tree.size=="Very Large"] <- "Very Large (would take many people to wrap arms around trunk)"
-data$field.optional...tree.size[data$field.optional...tree.size=="Very small (can wrap a single hand around stem)"] <- "Very Small (can wrap a single hand around stem)"
+data$field.optional...tree.size[data$field.optional...tree.size=="Very small (can wrap a single hand around stem)"] <- "Very small (can wrap a single hand around stem)"
 ```
 
 
 ```{r}
-data$field.optional...site.location.description [data$field.optional...site.location.description =="Yard or open park grounds"] <- "Urban yard or open park grounds"
+#Some reason field was not available in export list of field in iNat?
+#data$field.optional...site.location.description [data$field.optional...site.location.description =="Yard or open park grounds"] <- "Urban yard or open park grounds" 
 ```
 
 ### Reclassify co-factors
@@ -300,8 +523,6 @@ data$Percent.Dieback.Modified[data$field.percent.canopy.affected....=="tree is d
 #data$field.dieback.percent[is.na(data$field.dieback.percent)] <- data$Percent.Dieback.Modified
 
 data$field.percent.canopy.affected....[data$Percent.Dieback.Modified==100] <- "tree is dead" #there were a couple healthy trees with 100 dieback somehow..
-
-str(data$field.dieback.percent)
 
 has.dieback.percent <- data %>% filter(field.dieback.percent!="")
 does.not.have.dieback.percent <- data %>% filter(field.dieback.percent=="") 
@@ -427,7 +648,7 @@ data <- data %>% filter(scientific_name=="Thuja plicata" | scientific_name=="Thu
 
 ### Check for outliers
 
-Check bservations to see if any are more than +/- 5 degrees C from mean.
+Check oservations to see if any are more than +/- 5 degrees C from mean.
 
 ```{r}
 ggplot(data,aes(dist.from.mean.af.c,field.dieback.percent))+geom_point()+theme_bw()
@@ -452,7 +673,7 @@ ggplot(data,aes(y=latitude.y,x=longitude.y,size=positional_accuracy)) +geom_poin
 ## Export Modified Data
 
 ```{r}
-write.csv(data,file="./urban-data-modified.csv")
+#write.csv(data,file="./urban-data-modified.csv")
 ```
 
 [urban-data-modified.csv](./urban-data-modified.csv)

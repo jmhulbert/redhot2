@@ -1,30 +1,41 @@
 ---
 title: "Welcome"
 output: html_document
-date: "2025-09-03"
+date: "2026-05-13"
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Welcome
+|            |            |            |            |            |
+|:----------:|:----------:|:----------:|:----------:|:----------:|
+|[Welcome](https://jmhulbert.github.io/redhot2)|[Data](https://jmhulbert.github.io/redhot2/data)|[Analyses](https://jmhulbert.github.io/redhot2/analyses)|[Discussion](https://jmhulbert.github.io/redhot2/discussion)|[Maps](https://jmhulbert.github.io/redhot2/maps)
+|             |           |            |            |            |
 
-Welcome to the 2.0 version of the redhot analyses. 
+|            |            |            | Analyses   |            |            |            |
+|:----------:|:----------:|:----------:|:----------:|:----------:|:----------:|:----------:|
+|[Urban Heat](https://jmhulbert.github.io/redhot2/analyses/heat/)|[All Areas](https://jmhulbert.github.io/redhot2/analyses/heat/all-areas)|[Portland](https://jmhulbert.github.io/redhot2/analyses/heat/portland)|[Tacoma](https://jmhulbert.github.io/redhot2/analyses/heat/tacoma)|[King County](https://jmhulbert.github.io/redhot2/analyses/heat/king)|[iNaturalist](https://jmhulbert.github.io/redhot2/analyses/inaturalist/)|[City Inventories](https://jmhulbert.github.io/redhot2/analyses/city-trees/)|
+|             |           |            |            |            |            |            |
+
+Welcome to the 2.0 version of the redhot analyses. These analyses were last updated in May, 2026.
 
 
 # Purpose
 
 The purpose of this repository is to document the analyses completed for the urban redcedar heat study. 
 
-
-
 # Softwares
 
 * All data wrangling and analyses were completed with 
   + R version 4.5.1 (2025-06-13)
-  + R Studio 2025.05.1
+  + R Studio 2026.04.0+526 
   + QGIS-LTR 3.40-5-Bratislava
+  
+```{r}
+#sessionInfo()
+```
+  
   
   
   
